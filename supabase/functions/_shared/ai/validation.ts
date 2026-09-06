@@ -61,3 +61,19 @@ export const aiContextSchema = z.object({
   strengths: z.array(z.string()),
   reasoning_summary: z.string(),
 })
+
+export const coverLetterSchema = z.string().trim().min(50)
+
+export const optimizedCVSchema = z.object({
+  summary: z.string(),
+  highlighted_skills: z.array(z.string()),
+  reordered_experience: z.array(
+    z.object({
+      company: z.string(),
+      title: z.string(),
+      start_date: z.string().optional(),
+      end_date: z.string().optional(),
+      description: z.string().optional(),
+    }),
+  ),
+})

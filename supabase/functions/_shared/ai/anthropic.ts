@@ -13,8 +13,8 @@ import type {
   OptimizeCVInput,
   OptimizedCV,
 } from './types.ts'
-import { NotImplementedYetError } from './types.ts'
-import { aiContextSchema, cvAnalysisSchema, jobAnalysisSchema } from './validation.ts'
+import { aiContextSchema, coverLetterSchema, cvAnalysisSchema, jobAnalysisSchema, optimizedCVSchema } from './validation.ts'
+import { sanitizeOptimizedCV } from './antiHallucination.ts'
 import {
   calculateEducationScore,
   calculateExperienceScore,
@@ -163,6 +163,79 @@ const AI_CONTEXT_TOOL = {
   },
 }
 
+const OPTIMIZE_CV_TOOL = {
+  name: 'record_optimized_cv',
+  description:
+    'Records a CV tailored to a specific job. You may only reorder, rephrase or summarize ' +
+    'information that already exists in the candidate CV — never invent a company, title, date, ' +
+    'skill, or achievement that is not already present.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      summary: {
+        type: 'string',
+        description: 'A professional summary rewritten to emphasize fit for this job, using only real facts from the CV.',
+      },
+      highlighted_skills: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'A reordered subset of the candidate\'s existing skills, most relevant to this job first.',
+      },
+      reordered_experience: {
+        type: 'array',
+        description: 'The candidate\'s existing experience entries, reordered by relevance and with descriptions reworded to emphasize what matters for this job.',
+        items: {
+          type: 'object',
+          properties: {
+            company: { type: 'string' },
+            title: { type: 'string' },
+            start_date: { type: 'string' },
+            end_date: { type: 'string' },
+            description: { type: 'string' },
+          },
+          required: ['company', 'title'],
+        },
+      },
+    },
+    required: ['summary', 'highlighted_skills', 'reordered_experience'],
+  },
+}
+
+async function callAnthropicText(params: {
+  apiKey: string
+  model: string
+  system: string
+  userMessage: string
+  maxTokens?: number
+}): Promise<string> {
+  const response = await fetch(ANTHROPIC_API_URL, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': params.apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: params.model,
+      max_tokens: params.maxTokens ?? 2048,
+      system: params.system,
+      messages: [{ role: 'user', content: params.userMessage }],
+    }),
+  })
+
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(`Anthropic API error (${response.status}): ${body}`)
+  }
+
+  const data = await response.json()
+  const textBlock = data.content?.find((block: { type: string }) => block.type === 'text')
+  if (!textBlock) {
+    throw new Error('Anthropic response did not include a text block')
+  }
+  return textBlock.text as string
+}
+
 async function callAnthropicTool<T>(params: {
   apiKey: string
   model: string
@@ -309,13 +382,57 @@ export class AnthropicProvider implements AIProvider {
     }
   }
 
-  // Ships with the "Agents IA" phase.
-  generateCoverLetter(_input: CoverLetterInput): Promise<string> {
-    throw new NotImplementedYetError('generateCoverLetter', 'Agents IA')
+  async generateCoverLetter(input: CoverLetterInput): Promise<string> {
+    const toneInstruction: Record<NonNullable<CoverLetterInput['tone']>, string> = {
+      formal: 'Ton formel et professionnel.',
+      enthusiastic: 'Ton enthousiaste et motivé, tout en restant professionnel.',
+      concise: 'Ton concis et direct, phrases courtes.',
+    }
+
+    const experienceLines = input.cvAnalysis.experience
+      .map((e) => `- ${e.title} chez ${e.company}${e.description ? ` : ${e.description}` : ''}`)
+      .join('\n')
+    const skillsLine = input.cvAnalysis.skills.map((s) => s.name).join(', ')
+
+    const letter = await callAnthropicText({
+      apiKey: this.apiKey,
+      model: this.model,
+      system:
+        'Tu rédiges des lettres de motivation en français pour un assistant de recherche ' +
+        "d'emploi. Utilise EXCLUSIVEMENT les informations réelles du candidat fournies " +
+        'ci-dessous — ne jamais inventer une expérience, un diplôme, une compétence ou un ' +
+        'chiffre. Structure : introduction, pourquoi ce poste, compétences pertinentes, ' +
+        'valeur ajoutée, conclusion. Pas de placeholder du type [Nom] : si une information ' +
+        "manque, ne l'invente pas et n'en parle simplement pas. " +
+        (toneInstruction[input.tone ?? 'formal'] ?? ''),
+      userMessage:
+        `Poste : ${input.jobTitle}\nEntreprise : ${input.company}\n\n` +
+        `Description du poste :\n${input.jobDescription}\n\n` +
+        `Résumé du candidat : ${input.cvAnalysis.summary}\n` +
+        `Compétences du candidat : ${skillsLine}\n` +
+        `Expériences du candidat :\n${experienceLines}`,
+      maxTokens: 1500,
+    })
+
+    return coverLetterSchema.parse(letter)
   }
 
-  // Ships with the "Agents IA" phase.
-  optimizeCV(_input: OptimizeCVInput): Promise<OptimizedCV> {
-    throw new NotImplementedYetError('optimizeCV', 'Agents IA')
+  async optimizeCV(input: OptimizeCVInput): Promise<OptimizedCV> {
+    const result = await callAnthropicTool<OptimizedCV>({
+      apiKey: this.apiKey,
+      model: this.model,
+      system:
+        'You tailor a candidate CV to a specific job posting. You may only reorder, ' +
+        'rephrase or summarize information already present in the CV — never invent a ' +
+        'company, title, date, skill, or achievement. Respond in French.',
+      userMessage:
+        `Job title: ${input.jobTitle}\n\nJob description:\n${input.jobDescription}\n\n` +
+        `Candidate CV (JSON):\n${JSON.stringify(input.cvAnalysis)}`,
+      tool: OPTIMIZE_CV_TOOL,
+    })
+    const validated = optimizedCVSchema.parse(result)
+    // Defense in depth beyond the prompt: strip anything that doesn't match
+    // a real skill/experience entry from the candidate's actual CV.
+    return sanitizeOptimizedCV(validated, input.cvAnalysis)
   }
 }

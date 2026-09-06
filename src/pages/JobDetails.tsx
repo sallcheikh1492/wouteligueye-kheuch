@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { ScoreBadge } from '@/components/jobs/ScoreBadge'
+import { DocumentsPanel } from '@/components/ai/DocumentsPanel'
 import { useCalculateMatch, useJob, useJobMatch } from '@/hooks/useJobs'
 import { useSetApplicationStatus } from '@/hooks/useApplications'
 
@@ -243,6 +244,8 @@ export default function JobDetails() {
           )}
         </CardContent>
       </Card>
+
+      <DocumentsPanel jobId={job.id} company={job.company} />
     </div>
   )
 }

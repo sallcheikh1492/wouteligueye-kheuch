@@ -51,6 +51,14 @@ export type CVAnalysis = {
   certifications: CVCertification[]
 }
 
+export type OptimizedCV = {
+  summary: string
+  highlighted_skills: string[]
+  reordered_experience: CVExperience[]
+}
+
+export type CoverLetterTone = 'formal' | 'enthusiastic' | 'concise'
+
 export const ACCEPTED_CV_MIME_TYPES = [
   'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

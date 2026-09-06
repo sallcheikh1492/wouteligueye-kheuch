@@ -160,6 +160,24 @@ Offres permet d'ajouter une offre par ses informations via l'Edge Function `proc
 (spec section 11 : l'import manuel doit toujours être possible). L'offre est immédiatement
 analysée après import.
 
+## Agents IA (lettre de motivation, CV optimisé)
+
+Deux Edge Functions complètent l'abstraction `AIProvider` :
+
+- **`generate-cover-letter`** rédige une lettre de motivation (introduction, pourquoi ce poste,
+  compétences pertinentes, valeur ajoutée, conclusion) à partir du CV principal de l'utilisateur et
+  d'une offre, avec un ton au choix (formel/enthousiaste/concis). Le résultat est éditable et
+  régénérable depuis la page de détail de l'offre, et téléchargeable en `.txt`.
+- **`optimize-cv`** réorganise et reformule les compétences et expériences existantes pour mettre
+  en avant celles pertinentes au poste — jamais de nouvelle information inventée. Cette règle
+  absolue du cahier des charges est appliquée deux fois : dans la consigne donnée au modèle, et par
+  un filtre déterministe côté serveur (`_shared/ai/antiHallucination.ts`) qui retire toute
+  compétence ou expérience ne correspondant pas exactement à une entrée réelle du CV, et
+  réintroduit toute expérience réelle que le modèle aurait omise.
+
+Les deux documents sont enregistrés dans `generated_documents`, liés à la candidature existante le
+cas échéant (dont le statut passe alors à `documents_ready`).
+
 ## Fournisseurs IA
 
 L'application communique avec les modèles d'IA uniquement depuis les Edge Functions Supabase, via
@@ -167,9 +185,8 @@ l'interface `AIProvider` (voir `supabase/functions/_shared/ai/types.ts`). Le fou
 est **Anthropic Claude** (`claude-sonnet-5`, voir `_shared/ai/anthropic.ts`) ; l'abstraction permet
 d'ajouter d'autres fournisseurs sans changer le code appelant.
 
-`analyzeCV()`, `analyzeJob()` et `calculateMatch()` sont implémentées. `generateCoverLetter()` et
-`optimizeCV()` arrivent avec les agents IA (étape 7) — les appeler avant cela lève volontairement
-une erreur explicite plutôt que de renvoyer un résultat silencieusement incorrect.
+Les 5 méthodes de l'interface `AIProvider` sont maintenant implémentées : `analyzeCV()`,
+`analyzeJob()`, `calculateMatch()`, `generateCoverLetter()` et `optimizeCV()`.
 
 ## Feuille de route
 
@@ -179,7 +196,7 @@ une erreur explicite plutôt que de renvoyer un résultat silencieusement incorr
 - [x] Étape 4 — Interface principale (dashboard, offres, candidatures, profil)
 - [x] Étape 5 — Import et analyse de CV
 - [x] Étape 6 — Moteur de matching IA
-- [ ] Étape 7 — Agents IA (CV, offres, lettres de motivation)
+- [x] Étape 7 — Agents IA (lettre de motivation, CV optimisé)
 - [ ] Étape 8 — Découverte automatique des offres
 - [ ] Étape 9 — Planification et automatisation
 - [ ] Étape 10 — Notifications et tests de bout en bout

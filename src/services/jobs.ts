@@ -63,6 +63,7 @@ export async function fetchRecentMatches(userId: string, limit = 5): Promise<Job
 }
 
 export async function fetchJobMatch(userId: string, jobId: string): Promise<JobMatchWithJob | null> {
+
   const { data, error } = await supabase
     .from('job_matches')
     .select('*, jobs(*)')
