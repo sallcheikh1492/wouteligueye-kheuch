@@ -5,6 +5,7 @@ import { ThemeProvider } from 'next-themes'
 import { BrowserRouter } from 'react-router-dom'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Toaster } from '@/components/ui/sonner'
+import { AuthProvider } from '@/contexts/AuthContext'
 import App from './App.tsx'
 import './index.css'
 
@@ -22,10 +23,12 @@ createRoot(document.getElementById('root')!).render(
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <TooltipProvider delayDuration={200}>
-            <App />
-            <Toaster richColors position="top-right" />
-          </TooltipProvider>
+          <AuthProvider>
+            <TooltipProvider delayDuration={200}>
+              <App />
+              <Toaster richColors position="top-right" />
+            </TooltipProvider>
+          </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>
     </ThemeProvider>

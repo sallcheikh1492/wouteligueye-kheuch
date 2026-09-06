@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Bot, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -9,29 +9,28 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { useAuth } from '@/contexts/AuthContext'
-import { loginSchema, type LoginValues } from '@/lib/validation/auth'
+import { resetPasswordSchema, type ResetPasswordValues } from '@/lib/validation/auth'
 
-export default function Login() {
-  const { signIn } = useAuth()
+export default function ResetPassword() {
+  const { updatePassword } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
   const [submitting, setSubmitting] = useState(false)
 
-  const form = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+  const form = useForm<ResetPasswordValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { password: '', confirmPassword: '' },
   })
 
-  async function onSubmit(values: LoginValues) {
+  async function onSubmit(values: ResetPasswordValues) {
     setSubmitting(true)
-    const { error } = await signIn(values.email, values.password)
+    const { error } = await updatePassword(values.password)
     setSubmitting(false)
     if (error) {
       toast.error(error)
       return
     }
-    const redirectTo = (location.state as { from?: string } | null)?.from ?? '/'
-    navigate(redirectTo, { replace: true })
+    toast.success('Mot de passe mis à jour.')
+    navigate('/', { replace: true })
   }
 
   return (
@@ -39,20 +38,20 @@ export default function Login() {
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
           <Bot className="mb-2 size-8 text-primary" />
-          <CardTitle>Connexion</CardTitle>
-          <CardDescription>Accédez à votre espace JobHunter AI</CardDescription>
+          <CardTitle>Nouveau mot de passe</CardTitle>
+          <CardDescription>Choisissez un nouveau mot de passe pour votre compte</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>E-mail</FormLabel>
+                    <FormLabel>Nouveau mot de passe</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="vous@exemple.com" autoComplete="email" {...field} />
+                      <Input type="password" placeholder="••••••••" autoComplete="new-password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -60,17 +59,12 @@ export default function Login() {
               />
               <FormField
                 control={form.control}
-                name="password"
+                name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Mot de passe</FormLabel>
-                      <Link to="/forgot-password" className="text-xs text-muted-foreground underline">
-                        Mot de passe oublié ?
-                      </Link>
-                    </div>
+                    <FormLabel>Confirmer le mot de passe</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" autoComplete="current-password" {...field} />
+                      <Input type="password" placeholder="••••••••" autoComplete="new-password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -78,14 +72,8 @@ export default function Login() {
               />
               <Button type="submit" disabled={submitting} className="gap-2">
                 {submitting && <Loader2 className="size-4 animate-spin" />}
-                Se connecter
+                Mettre à jour le mot de passe
               </Button>
-              <p className="text-center text-xs text-muted-foreground">
-                Pas encore de compte ?{' '}
-                <Link to="/signup" className="underline">
-                  Créer un compte
-                </Link>
-              </p>
             </form>
           </Form>
         </CardContent>

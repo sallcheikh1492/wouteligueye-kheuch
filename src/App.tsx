@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
+import { ProtectedRoute, PublicOnlyRoute } from '@/components/layout/ProtectedRoute'
 import Dashboard from '@/pages/Dashboard'
 import Jobs from '@/pages/Jobs'
 import JobDetails from '@/pages/JobDetails'
@@ -10,23 +11,34 @@ import AISettings from '@/pages/AISettings'
 import Settings from '@/pages/Settings'
 import Login from '@/pages/Login'
 import Signup from '@/pages/Signup'
+import ForgotPassword from '@/pages/ForgotPassword'
+import ResetPassword from '@/pages/ResetPassword'
 import NotFound from '@/pages/NotFound'
 
 function App() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
+      <Route element={<PublicOnlyRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+      </Route>
 
-      <Route element={<AppShell />}>
-        <Route index element={<Dashboard />} />
-        <Route path="/jobs" element={<Jobs />} />
-        <Route path="/jobs/:jobId" element={<JobDetails />} />
-        <Route path="/applications" element={<Applications />} />
-        <Route path="/cv-manager" element={<CVManager />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/ai-settings" element={<AISettings />} />
-        <Route path="/settings" element={<Settings />} />
+      {/* Reachable only via the recovery link Supabase emails; not gated behind PublicOnlyRoute
+          because clicking it already creates a temporary session. */}
+      <Route path="/reset-password" element={<ResetPassword />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppShell />}>
+          <Route index element={<Dashboard />} />
+          <Route path="/jobs" element={<Jobs />} />
+          <Route path="/jobs/:jobId" element={<JobDetails />} />
+          <Route path="/applications" element={<Applications />} />
+          <Route path="/cv-manager" element={<CVManager />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/ai-settings" element={<AISettings />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
       </Route>
 
       <Route path="/404" element={<NotFound />} />

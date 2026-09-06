@@ -82,6 +82,19 @@ Un profil de démonstration (Business Intelligence / Data Analyst, voir section 
 charges) peut être chargé volontairement via la fonction RPC `seed_demo_profile()` — jamais exécutée
 automatiquement, uniquement pour tester l'application avant d'importer un vrai CV.
 
+## Authentification
+
+L'inscription, la connexion, la réinitialisation du mot de passe et la déconnexion utilisent
+Supabase Auth (`src/contexts/AuthContext.tsx`). Toutes les routes de l'application (tableau de
+bord, offres, candidatures, etc.) sont protégées par `ProtectedRoute` et redirigent vers `/login`
+tant qu'aucune session n'est active ; à l'inverse, `/login`, `/signup` et `/forgot-password`
+redirigent vers le tableau de bord si l'utilisateur est déjà connecté. Un profil est créé
+automatiquement dans `public.profiles` à l'inscription (trigger `handle_new_user`).
+
+Ces écrans nécessitent un vrai projet Supabase pour être testés de bout en bout (inscription,
+e-mail de confirmation, connexion, lien de réinitialisation) — ils ont été vérifiés visuellement
+et sur la validation des formulaires avec des identifiants factices, sans backend réel.
+
 ## Fournisseurs IA
 
 L'application communique avec les modèles d'IA uniquement depuis les Edge Functions Supabase, via
@@ -93,7 +106,7 @@ appelant.
 
 - [x] Étape 1 — Architecture et scaffolding (frontend, structure de dossiers, shadcn/ui)
 - [x] Étape 2 — Schéma de base de données et politiques RLS
-- [ ] Étape 3 — Authentification (inscription, connexion, réinitialisation)
+- [x] Étape 3 — Authentification (inscription, connexion, réinitialisation)
 - [ ] Étape 4 — Interface principale (dashboard, offres, candidatures, profil)
 - [ ] Étape 5 — Import et analyse de CV
 - [ ] Étape 6 — Moteur de matching IA

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   Briefcase,
@@ -12,10 +12,21 @@ import {
   X,
   Moon,
   Sun,
+  LogOut,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { cn } from 'cn'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useAuth } from '@/contexts/AuthContext'
 
 const NAV_ITEMS: {
   to: string
@@ -44,6 +55,45 @@ function ThemeToggle() {
       <Sun className="hidden size-4 dark:block" />
       <Moon className="block size-4 dark:hidden" />
     </Button>
+  )
+}
+
+function UserMenu() {
+  const { user, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  const fullName = (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? ''
+  const initials = fullName
+    .split(' ')
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+
+  async function handleSignOut() {
+    await signOut()
+    navigate('/login', { replace: true })
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="rounded-full" aria-label="Menu du compte">
+          <Avatar className="size-8">
+            <AvatarFallback>{initials || 'U'}</AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel className="truncate">{user?.email}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive">
+          <LogOut className="size-4" />
+          Se déconnecter
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -128,7 +178,10 @@ export function AppShell() {
               JobHunter AI
             </Link>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <UserMenu />
+          </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <Outlet />
