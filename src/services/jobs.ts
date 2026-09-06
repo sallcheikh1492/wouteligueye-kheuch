@@ -83,3 +83,31 @@ export async function fetchJob(jobId: string): Promise<Tables<'jobs'> | null> {
   if (error) throw error
   return data
 }
+
+export type ManualJobInput = {
+  title: string
+  company: string
+  location?: string
+  application_url?: string
+  description?: string
+}
+
+export async function processJob(input: ManualJobInput): Promise<Tables<'jobs'>> {
+  const { data, error } = await supabase.functions.invoke<{ job: Tables<'jobs'>; error?: string }>(
+    'process-job',
+    { body: input },
+  )
+  if (error) throw error
+  if (!data || data.error) throw new Error(data?.error ?? "Échec de l'import de l'offre")
+  return data.job
+}
+
+export async function calculateJobMatch(jobId: string) {
+  const { data, error } = await supabase.functions.invoke<{ match?: unknown; error?: string }>(
+    'calculate-job-match',
+    { body: { job_id: jobId } },
+  )
+  if (error) throw error
+  if (!data || data.error) throw new Error(data?.error ?? 'Échec du calcul du score')
+  return data.match
+}

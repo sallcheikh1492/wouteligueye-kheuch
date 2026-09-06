@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Building2, MapPin, CalendarDays, ExternalLink, Send, Heart } from 'lucide-react'
+import { ArrowLeft, Building2, MapPin, CalendarDays, ExternalLink, Send, Heart, RefreshCw, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -9,14 +9,66 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { ScoreBadge } from '@/components/jobs/ScoreBadge'
-import { useJobMatch } from '@/hooks/useJobs'
+import { useCalculateMatch, useJob, useJobMatch } from '@/hooks/useJobs'
 import { useSetApplicationStatus } from '@/hooks/useApplications'
+
+function UnmatchedJob({ jobId }: { jobId: string }) {
+  const { data: job, isLoading } = useJob(jobId)
+  const calculateMatch = useCalculateMatch()
+
+  function handleCalculate() {
+    calculateMatch.mutate(jobId, {
+      onSuccess: () => toast.success('Score de compatibilité calculé'),
+      onError: (error) =>
+        toast.error(error instanceof Error ? error.message : 'Impossible de calculer le score'),
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <Button variant="ghost" size="sm" className="w-fit gap-2" asChild>
+        <Link to="/jobs">
+          <ArrowLeft className="size-4" />
+          Retour aux offres
+        </Link>
+      </Button>
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          {isLoading ? (
+            <Skeleton className="h-6 w-48" />
+          ) : job ? (
+            <>
+              <p className="text-sm font-medium">
+                {job.title} · {job.company}
+              </p>
+              <p className="max-w-md text-sm text-muted-foreground">
+                Cette offre n&apos;a pas encore de score de compatibilité pour votre profil.
+              </p>
+              <Button className="gap-2" onClick={handleCalculate} disabled={calculateMatch.isPending}>
+                <Sparkles className="size-4" />
+                Calculer le score de compatibilité
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-medium">Offre introuvable</p>
+              <p className="max-w-md text-sm text-muted-foreground">
+                Cette offre n&apos;existe pas ou a été supprimée.
+              </p>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
 
 export default function JobDetails() {
   const { jobId } = useParams()
   const navigate = useNavigate()
   const { data: match, isLoading, isError } = useJobMatch(jobId)
   const setStatus = useSetApplicationStatus()
+  const calculateMatch = useCalculateMatch()
 
   if (isLoading) {
     return (
@@ -28,29 +80,14 @@ export default function JobDetails() {
   }
 
   if (isError || !match) {
-    return (
-      <div className="flex flex-col gap-6">
-        <Button variant="ghost" size="sm" className="w-fit gap-2" asChild>
-          <Link to="/jobs">
-            <ArrowLeft className="size-4" />
-            Retour aux offres
-          </Link>
-        </Button>
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <p className="text-sm font-medium">Offre introuvable</p>
-            <p className="max-w-md text-sm text-muted-foreground">
-              Cette offre n&apos;existe pas ou n&apos;a pas encore été analysée pour votre profil.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    )
+    return jobId ? <UnmatchedJob jobId={jobId} /> : null
   }
 
   const { jobs: job } = match
   const missingSkills = Array.isArray(match.missing_skills) ? (match.missing_skills as string[]) : []
   const strengths = Array.isArray(match.strengths) ? (match.strengths as string[]) : []
+  const aiAnalysis = match.ai_analysis as { reasoning_summary?: string } | null
+  const reasoningSummary = aiAnalysis?.reasoning_summary
 
   function handleFavorite() {
     setStatus.mutate(
@@ -75,6 +112,14 @@ export default function JobDetails() {
     )
   }
 
+  function handleRecalculate() {
+    calculateMatch.mutate(job.id, {
+      onSuccess: () => toast.success('Score recalculé'),
+      onError: (error) =>
+        toast.error(error instanceof Error ? error.message : 'Impossible de recalculer le score'),
+    })
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <Button variant="ghost" size="sm" className="w-fit gap-2" asChild>
@@ -94,7 +139,18 @@ export default function JobDetails() {
                 {job.company}
               </p>
             </div>
-            <ScoreBadge score={match.overall_score} className="text-sm" />
+            <div className="flex items-center gap-2">
+              <ScoreBadge score={match.overall_score} className="text-sm" />
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                aria-label="Recalculer le score"
+                onClick={handleRecalculate}
+                disabled={calculateMatch.isPending}
+              >
+                <RefreshCw className={calculateMatch.isPending ? 'size-3.5 animate-spin' : 'size-3.5'} />
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
@@ -163,9 +219,13 @@ export default function JobDetails() {
           )}
 
           {match.recommendation && (
-            <div className="rounded-md border border-border bg-muted/30 p-3 text-sm">
+            <div className="rounded-md border border-border bg-muted/30 p-3 text-sm font-medium">
               {match.recommendation}
             </div>
+          )}
+
+          {reasoningSummary && (
+            <p className="text-sm text-muted-foreground">{reasoningSummary}</p>
           )}
 
           {job.description && (

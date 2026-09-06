@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { JobCard } from '@/components/jobs/JobCard'
+import { AddJobDialog } from '@/components/jobs/AddJobDialog'
 import { useDismissJobMatch, useMatchedJobs } from '@/hooks/useJobs'
 import { useSetApplicationStatus } from '@/hooks/useApplications'
 
@@ -70,11 +71,14 @@ export default function Jobs() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Offres d&apos;emploi</h1>
-        <p className="text-sm text-muted-foreground">
-          Offres découvertes et analysées par votre agent IA.
-        </p>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Offres d&apos;emploi</h1>
+          <p className="text-sm text-muted-foreground">
+            Offres découvertes et analysées par votre agent IA.
+          </p>
+        </div>
+        <AddJobDialog />
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -126,9 +130,9 @@ export default function Jobs() {
           <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
             <p className="text-sm font-medium">Aucune offre pour le moment</p>
             <p className="max-w-md text-sm text-muted-foreground">
-              Lancez une recherche manuelle ou activez la planification automatique dans les
-              Paramètres pour que l&apos;agent commence à découvrir des offres correspondant à
-              votre profil.
+              Ajoutez une offre manuellement ci-dessus, ou activez la planification automatique
+              dans les Paramètres pour que l&apos;agent commence à découvrir des offres
+              correspondant à votre profil.
             </p>
           </CardContent>
         </Card>

@@ -239,6 +239,7 @@ export type Database = {
           published_at: string | null
           expires_at: string | null
           raw_data: Json | null
+          ai_analysis: Json | null
           status: JobStatus
           created_at: string
         }
@@ -259,6 +260,7 @@ export type Database = {
           published_at?: string | null
           expires_at?: string | null
           raw_data?: Json | null
+          ai_analysis?: Json | null
           status?: JobStatus
           created_at?: string
         }

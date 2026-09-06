@@ -1,6 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
-import { deleteJobMatch, fetchJobMatch, fetchMatchedJobs, type JobFilters } from '@/services/jobs'
+import {
+  calculateJobMatch,
+  deleteJobMatch,
+  fetchJob,
+  fetchJobMatch,
+  fetchMatchedJobs,
+  processJob,
+  type JobFilters,
+  type ManualJobInput,
+} from '@/services/jobs'
 
 export function useMatchedJobs(filters: JobFilters = {}) {
   const { user } = useAuth()
@@ -17,6 +26,35 @@ export function useJobMatch(jobId: string | undefined) {
     queryKey: ['job_match', user?.id, jobId],
     queryFn: () => fetchJobMatch(user!.id, jobId!),
     enabled: !!user && !!jobId,
+  })
+}
+
+export function useJob(jobId: string | undefined) {
+  return useQuery({
+    queryKey: ['job', jobId],
+    queryFn: () => fetchJob(jobId!),
+    enabled: !!jobId,
+  })
+}
+
+export function useProcessJob() {
+  return useMutation({
+    mutationFn: (input: ManualJobInput) => processJob(input),
+  })
+}
+
+export function useCalculateMatch() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (jobId: string) => calculateJobMatch(jobId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['job_matches', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['top_matches', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['recent_matches', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['job_match', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard_stats', user?.id] })
+    },
   })
 }
 

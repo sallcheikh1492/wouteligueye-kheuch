@@ -84,10 +84,12 @@ export type JobAnalysis = {
 
 export type MatchInput = {
   cvAnalysis: CVAnalysis
-  jobAnalysis: JobAnalysis
+  cvRawText: string
   userSkills: string[]
-  preferredLocations: string[]
+  jobAnalysis: JobAnalysis
+  jobDescription: string
   jobLocation: string | null
+  preferredLocations: string[]
   remotePreference: string
 }
 

@@ -129,6 +129,37 @@ Le résultat est ensuite présenté dans une boîte de dialogue de relecture (ri
 dans le profil sans validation) : le résumé peut être renvoyé vers `profiles.professional_summary`,
 et les compétences sélectionnées peuvent être importées individuellement dans `skills`.
 
+## Moteur de matching IA
+
+Le score de compatibilité (0-100) combine des règles déterministes et une évaluation IA
+contextuelle, jamais l'IA seule (spec section 12) :
+
+| Composante | Poids | Calcul |
+|---|---|---|
+| Compétences | 35 % | recoupement compétences utilisateur ↔ requises/préférées du poste (`_shared/matching/scoring.ts`) |
+| Expérience | 20 % | années d'expérience estimées depuis le CV vs séniorité attendue |
+| Formation | 15 % | pertinence du domaine d'études |
+| Localisation | 10 % | correspondance avec les localisations préférées / télétravail |
+| Mots-clés | 10 % | recoupement lexical CV ↔ description du poste |
+| Contexte IA | 10 % | évaluation holistique par Claude (trajectoire, pertinence globale) |
+
+Deux Edge Functions :
+
+- **`analyze-job`** extrait les exigences structurées d'une offre (résumé, compétences requises/
+  préférées, séniorité, responsabilités) et met le résultat en cache sur `jobs.ai_analysis` — calculé
+  une seule fois par offre, jamais par utilisateur.
+- **`calculate-job-match`** calcule les 5 scores déterministes, appelle Claude pour le score de
+  contexte, combine le tout selon les poids ci-dessus, et enregistre le résultat dans `job_matches`
+  (via la clé de service, cette table n'ayant pas de politique INSERT/UPDATE pour les utilisateurs).
+
+Toutes les réponses IA sont validées avec Zod avant d'être utilisées ou enregistrées
+(`_shared/ai/validation.ts`).
+
+**Import manuel d'offres** — en attendant l'agent de découverte automatique (étape 8), la page
+Offres permet d'ajouter une offre par ses informations via l'Edge Function `process-job`
+(spec section 11 : l'import manuel doit toujours être possible). L'offre est immédiatement
+analysée après import.
+
 ## Fournisseurs IA
 
 L'application communique avec les modèles d'IA uniquement depuis les Edge Functions Supabase, via
@@ -136,10 +167,9 @@ l'interface `AIProvider` (voir `supabase/functions/_shared/ai/types.ts`). Le fou
 est **Anthropic Claude** (`claude-sonnet-5`, voir `_shared/ai/anthropic.ts`) ; l'abstraction permet
 d'ajouter d'autres fournisseurs sans changer le code appelant.
 
-Seule `analyzeCV()` est implémentée pour l'instant. `analyzeJob()` et `calculateMatch()` arrivent
-avec le moteur de matching (étape 6) ; `generateCoverLetter()` et `optimizeCV()` avec les agents IA
-(étape 7) — les appeler avant cela lève volontairement une erreur explicite plutôt que de renvoyer
-un résultat silencieusement incorrect.
+`analyzeCV()`, `analyzeJob()` et `calculateMatch()` sont implémentées. `generateCoverLetter()` et
+`optimizeCV()` arrivent avec les agents IA (étape 7) — les appeler avant cela lève volontairement
+une erreur explicite plutôt que de renvoyer un résultat silencieusement incorrect.
 
 ## Feuille de route
 
@@ -148,7 +178,7 @@ un résultat silencieusement incorrect.
 - [x] Étape 3 — Authentification (inscription, connexion, réinitialisation)
 - [x] Étape 4 — Interface principale (dashboard, offres, candidatures, profil)
 - [x] Étape 5 — Import et analyse de CV
-- [ ] Étape 6 — Moteur de matching IA
+- [x] Étape 6 — Moteur de matching IA
 - [ ] Étape 7 — Agents IA (CV, offres, lettres de motivation)
 - [ ] Étape 8 — Découverte automatique des offres
 - [ ] Étape 9 — Planification et automatisation

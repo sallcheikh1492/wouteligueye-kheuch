@@ -10,3 +10,14 @@ export function createUserClient(authHeader: string) {
     { global: { headers: { Authorization: authHeader } } },
   )
 }
+
+// Bypasses RLS — only for writes to shared, non-user-owned tables (jobs,
+// job_matches, job_sources) that regular users are not allowed to write to
+// directly. Never use this to read or write another user's own data; always
+// verify the caller's identity with a user-scoped client first.
+export function createServiceRoleClient() {
+  return createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  )
+}
