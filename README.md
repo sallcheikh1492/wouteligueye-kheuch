@@ -68,6 +68,20 @@ npm run dev
    npx supabase functions deploy scheduled-job-search
    ```
 
+## Schéma de base de données
+
+Les migrations (`supabase/migrations/`) créent, dans l'ordre : les extensions et types énumérés,
+puis `profiles`, `cvs`, `skills`, `job_preferences`, `job_sources`, `jobs`, `job_matches`,
+`applications`, `generated_documents`, `agent_runs`, `notifications`. Chaque table de données
+utilisateur a Row Level Security activée avec des politiques `user_id = auth.uid()` (ou
+`id = auth.uid()` pour `profiles`) séparées par opération (SELECT/INSERT/UPDATE/DELETE). Les tables
+partagées (`job_sources`, `jobs`) sont en lecture seule pour les utilisateurs authentifiés ; seules
+les Edge Functions (clé `service_role`, qui contourne RLS) peuvent y écrire.
+
+Un profil de démonstration (Business Intelligence / Data Analyst, voir section 3 du cahier des
+charges) peut être chargé volontairement via la fonction RPC `seed_demo_profile()` — jamais exécutée
+automatiquement, uniquement pour tester l'application avant d'importer un vrai CV.
+
 ## Fournisseurs IA
 
 L'application communique avec les modèles d'IA uniquement depuis les Edge Functions Supabase, via
@@ -78,7 +92,7 @@ appelant.
 ## Feuille de route
 
 - [x] Étape 1 — Architecture et scaffolding (frontend, structure de dossiers, shadcn/ui)
-- [ ] Étape 2 — Schéma de base de données et politiques RLS
+- [x] Étape 2 — Schéma de base de données et politiques RLS
 - [ ] Étape 3 — Authentification (inscription, connexion, réinitialisation)
 - [ ] Étape 4 — Interface principale (dashboard, offres, candidatures, profil)
 - [ ] Étape 5 — Import et analyse de CV
