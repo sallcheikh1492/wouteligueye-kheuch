@@ -108,12 +108,38 @@ démonstration (`seed_demo_profile()`).
 Ces écrans restent vides tant qu'aucune offre n'a été découverte ou analysée — normal avant les
 étapes Agents IA et Découverte automatique, qui alimenteront `jobs` et `job_matches`.
 
+## Import et analyse de CV
+
+Les CV (PDF/DOCX, 10 Mo max) sont téléversés dans le bucket privé Supabase Storage `cvs`, sous
+`<user_id>/<fichier>` — les politiques RLS sur `storage.objects` limitent chaque utilisateur à son
+propre dossier. La page « Mes CV » permet d'importer, définir un CV principal et supprimer.
+
+L'analyse est déclenchée à la demande (bouton « Analyser ») et exécutée entièrement côté serveur
+par l'Edge Function `analyze-cv` :
+
+1. Téléchargement du fichier depuis Storage (avec le JWT de l'utilisateur — RLS garantit qu'il ne
+   peut accéder qu'à ses propres fichiers, aucune clé de service n'est nécessaire).
+2. Extraction du texte (`unpdf` pour les PDF, `mammoth` pour les DOCX).
+3. Extraction structurée par Claude via l'API *tool use* (schéma JSON strict : résumé,
+   compétences catégorisées, formations, expériences, projets, langues, certifications) —
+   consigne explicite de ne jamais inventer d'information absente du texte.
+4. Enregistrement du résultat sur la ligne `cvs` (`raw_text`, `parsed_data`).
+
+Le résultat est ensuite présenté dans une boîte de dialogue de relecture (rien n'est enregistré
+dans le profil sans validation) : le résumé peut être renvoyé vers `profiles.professional_summary`,
+et les compétences sélectionnées peuvent être importées individuellement dans `skills`.
+
 ## Fournisseurs IA
 
 L'application communique avec les modèles d'IA uniquement depuis les Edge Functions Supabase, via
-l'interface `AIProvider` (voir `supabase/functions/_shared`). Le fournisseur par défaut est
-**Anthropic Claude** ; l'abstraction permet d'ajouter d'autres fournisseurs sans changer le code
-appelant.
+l'interface `AIProvider` (voir `supabase/functions/_shared/ai/types.ts`). Le fournisseur par défaut
+est **Anthropic Claude** (`claude-sonnet-5`, voir `_shared/ai/anthropic.ts`) ; l'abstraction permet
+d'ajouter d'autres fournisseurs sans changer le code appelant.
+
+Seule `analyzeCV()` est implémentée pour l'instant. `analyzeJob()` et `calculateMatch()` arrivent
+avec le moteur de matching (étape 6) ; `generateCoverLetter()` et `optimizeCV()` avec les agents IA
+(étape 7) — les appeler avant cela lève volontairement une erreur explicite plutôt que de renvoyer
+un résultat silencieusement incorrect.
 
 ## Feuille de route
 
@@ -121,7 +147,7 @@ appelant.
 - [x] Étape 2 — Schéma de base de données et politiques RLS
 - [x] Étape 3 — Authentification (inscription, connexion, réinitialisation)
 - [x] Étape 4 — Interface principale (dashboard, offres, candidatures, profil)
-- [ ] Étape 5 — Import et analyse de CV
+- [x] Étape 5 — Import et analyse de CV
 - [ ] Étape 6 — Moteur de matching IA
 - [ ] Étape 7 — Agents IA (CV, offres, lettres de motivation)
 - [ ] Étape 8 — Découverte automatique des offres
