@@ -178,6 +178,32 @@ Deux Edge Functions complètent l'abstraction `AIProvider` :
 Les deux documents sont enregistrés dans `generated_documents`, liés à la candidature existante le
 cas échéant (dont le statut passe alors à `documents_ready`).
 
+## Découverte automatique des offres
+
+Architecture de connecteurs (`supabase/functions/_shared/discovery/`) : chaque source implémente
+l'interface `JobSourceConnector`. Le seul connecteur fourni est un **connecteur RSS/Atom
+générique** — un flux RSS est publié par un site spécifiquement pour la syndication automatisée,
+ce n'est donc ni du scraping ni un contournement d'accès. Aucun site tiers n'est codé en dur : vous
+ajoutez l'URL d'un flux que vous avez vous-même vérifié via la page Paramètres → Sources de
+recherche.
+
+**Edge Function `discover-jobs`** (POST, sans corps) : pour chaque source RSS active,
+récupère les entrées, ignore les doublons (contrainte `(source_id, external_id)`), insère les
+nouvelles offres, puis calcule automatiquement le score de compatibilité pour l'utilisateur
+appelant sur les 10 premières offres nouvellement importées (plafond pour maîtriser le temps
+d'exécution et le coût IA). Chaque exécution est journalisée dans `agent_runs`
+(`agent_type = 'job_discovery'`) avec compteurs et erreurs.
+
+Le calcul de score déterministe + IA a été factorisé dans
+`_shared/matching/computeAndSaveMatch.ts`, partagé par `calculate-job-match` et `discover-jobs`
+pour éviter la duplication.
+
+**Respect des conditions d'utilisation** — conformément au cahier des charges : aucun contournement
+de CAPTCHA ou d'authentification, aucune automatisation de connexion, uniquement des sources
+publiques (flux RSS, API officielle le cas échéant, ou import manuel). L'ajout d'une nouvelle
+source reste sous la responsabilité de l'utilisateur, qui doit s'assurer qu'elle est légitimement
+accessible.
+
 ## Fournisseurs IA
 
 L'application communique avec les modèles d'IA uniquement depuis les Edge Functions Supabase, via
@@ -197,7 +223,7 @@ Les 5 méthodes de l'interface `AIProvider` sont maintenant implémentées : `an
 - [x] Étape 5 — Import et analyse de CV
 - [x] Étape 6 — Moteur de matching IA
 - [x] Étape 7 — Agents IA (lettre de motivation, CV optimisé)
-- [ ] Étape 8 — Découverte automatique des offres
+- [x] Étape 8 — Découverte automatique des offres (connecteur RSS)
 - [ ] Étape 9 — Planification et automatisation
 - [ ] Étape 10 — Notifications et tests de bout en bout
 

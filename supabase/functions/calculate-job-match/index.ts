@@ -2,13 +2,12 @@
 //
 // Computes (or recomputes) the compatibility score between the caller and a
 // job, combining deterministic rules with one AI contextual assessment
-// (spec section 12), and upserts the result into job_matches. Ensures the
-// job has a cached analyze-job result first.
+// (spec section 12). See _shared/matching/computeAndSaveMatch.ts for the
+// actual scoring + persistence logic, shared with discover-jobs.
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts'
 import { createServiceRoleClient, createUserClient } from '../_shared/supabaseClient.ts'
 import { AnthropicProvider } from '../_shared/ai/anthropic.ts'
-import { ensureJobAnalysis } from '../_shared/matching/ensureJobAnalysis.ts'
-import type { CVAnalysis } from '../_shared/ai/types.ts'
+import { computeAndSaveMatch } from '../_shared/matching/computeAndSaveMatch.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -53,94 +52,25 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'Job not found' }, 404)
     }
 
-    const { data: cv, error: cvError } = await userClient
-      .from('cvs')
-      .select('parsed_data, raw_text')
-      .eq('user_id', user.id)
-      .eq('is_primary', true)
-      .maybeSingle()
-    if (cvError) {
-      console.error('Failed to load primary CV', cvError)
-      return jsonResponse({ error: 'Impossible de charger votre CV principal' }, 500)
-    }
-    if (!cv || !cv.parsed_data) {
-      return jsonResponse(
-        { error: 'Analysez votre CV principal avant de calculer un score de compatibilité' },
-        422,
-      )
-    }
-
-    const { data: skillRows, error: skillsError } = await userClient
-      .from('skills')
-      .select('name')
-      .eq('user_id', user.id)
-    if (skillsError) {
-      console.error('Failed to load skills', skillsError)
-      return jsonResponse({ error: 'Impossible de charger vos compétences' }, 500)
-    }
-
-    const { data: prefs, error: prefsError } = await userClient
-      .from('job_preferences')
-      .select('preferred_locations, remote_preference')
-      .eq('user_id', user.id)
-      .maybeSingle()
-    if (prefsError) {
-      console.error('Failed to load job preferences', prefsError)
-    }
-
     const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
     if (!apiKey) {
       console.error('ANTHROPIC_API_KEY is not configured')
       return jsonResponse({ error: "Le fournisseur IA n'est pas configuré" }, 500)
     }
 
-    const provider = new AnthropicProvider(apiKey)
-    const serviceClient = createServiceRoleClient()
-
-    const jobAnalysis = await ensureJobAnalysis(serviceClient, provider, job)
-
-    const preferredLocations = Array.isArray(prefs?.preferred_locations)
-      ? (prefs!.preferred_locations as string[])
-      : []
-
-    const matchResult = await provider.calculateMatch({
-      cvAnalysis: cv.parsed_data as unknown as CVAnalysis,
-      cvRawText: cv.raw_text ?? '',
-      userSkills: (skillRows ?? []).map((s) => s.name),
-      jobAnalysis,
-      jobDescription: job.description ?? '',
-      jobLocation: job.location,
-      preferredLocations,
-      remotePreference: prefs?.remote_preference ?? 'any',
+    const matchResult = await computeAndSaveMatch({
+      userClient,
+      serviceClient: createServiceRoleClient(),
+      provider: new AnthropicProvider(apiKey),
+      userId: user.id,
+      job,
     })
 
-    // job_matches has no INSERT/UPDATE policy for regular users by design
-    // (matches are always computed server-side) — the write goes through
-    // the service role, scoped explicitly to this user_id/job_id pair.
-    const { error: upsertError } = await serviceClient.from('job_matches').upsert(
-      {
-        job_id: jobId,
-        user_id: user.id,
-        overall_score: matchResult.overall_score,
-        skills_score: matchResult.skills_score,
-        experience_score: matchResult.experience_score,
-        education_score: matchResult.education_score,
-        location_score: matchResult.location_score,
-        keywords_score: matchResult.keywords_score,
-        ai_analysis: {
-          ai_context_score: matchResult.ai_context_score,
-          reasoning_summary: matchResult.reasoning_summary,
-          weights: { skills: 0.35, experience: 0.2, education: 0.15, location: 0.1, keywords: 0.1, ai_context: 0.1 },
-        },
-        missing_skills: matchResult.missing_skills,
-        strengths: matchResult.strengths,
-        recommendation: matchResult.recommendation,
-      },
-      { onConflict: 'job_id,user_id' },
-    )
-    if (upsertError) {
-      console.error('Failed to persist job match', upsertError)
-      return jsonResponse({ error: "Échec de l'enregistrement du score" }, 500)
+    if (!matchResult) {
+      return jsonResponse(
+        { error: 'Analysez votre CV principal avant de calculer un score de compatibilité' },
+        422,
+      )
     }
 
     return jsonResponse({ match: matchResult })
