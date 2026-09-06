@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/contexts/AuthContext'
+import { NotificationsBell } from './NotificationsBell'
 
 const NAV_ITEMS: {
   to: string
@@ -179,6 +180,7 @@ export function AppShell() {
             </Link>
           </div>
           <div className="flex items-center gap-1">
+            <NotificationsBell />
             <ThemeToggle />
             <UserMenu />
           </div>

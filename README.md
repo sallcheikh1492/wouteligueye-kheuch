@@ -204,6 +204,33 @@ publiques (flux RSS, API officielle le cas échéant, ou import manuel). L'ajout
 source reste sous la responsabilité de l'utilisateur, qui doit s'assurer qu'elle est légitimement
 accessible.
 
+## Planification et automatisation
+
+La recherche automatique tourne selon la fréquence choisie par chaque utilisateur
+(`job_preferences.search_frequency`, page Paramètres), orchestrée par **pg_cron + pg_net**
+(spec section 17) :
+
+1. Un job cron (configuré une fois via `supabase/scheduling.sql`, jamais dans une migration —
+   il a besoin de l'URL réelle du projet et d'un secret, qui n'existent qu'après déploiement)
+   appelle **`scheduled-job-search`** toutes les 30 minutes.
+2. Cette fonction détermine elle-même qui est réellement dû (dernière exécution vs fréquence
+   choisie), traite jusqu'à 20 utilisateurs par appel, et relance la même logique de découverte
+   que `discover-jobs` (factorisée dans `_shared/discovery/runDiscoveryForUser.ts`) pour chacun.
+3. Chaque exécution est journalisée dans `agent_runs` (visible dans « Activité récente de
+   l'agent » du tableau de bord), avec statut, compteurs et erreurs.
+4. Toute offre correspondant à 80 % ou plus déclenche une notification (spec section 20),
+   enregistrée via **`send-notification`** et visible dans la cloche de l'en-tête (marquage
+   lu/non lu, lien direct vers l'offre).
+
+`scheduled-job-search` et `send-notification` n'ont pas de session utilisateur (déclenchées par
+cron) : elles sont protégées par un secret partagé (`CRON_SECRET`, en-tête `x-cron-secret`) plutôt
+qu'un JWT, et utilisent exclusivement la clé de service. Voir `supabase/scheduling.sql` pour la
+procédure complète (stockage du secret dans Supabase Vault, jamais en clair dans le job cron).
+
+**Limite connue** : la recherche des utilisateurs « dus » interroge leur dernière exécution un par
+un (N+1) — largement suffisant à cette échelle, à revoir si l'application dépasse quelques
+centaines d'utilisateurs actifs.
+
 ## Fournisseurs IA
 
 L'application communique avec les modèles d'IA uniquement depuis les Edge Functions Supabase, via
@@ -224,8 +251,8 @@ Les 5 méthodes de l'interface `AIProvider` sont maintenant implémentées : `an
 - [x] Étape 6 — Moteur de matching IA
 - [x] Étape 7 — Agents IA (lettre de motivation, CV optimisé)
 - [x] Étape 8 — Découverte automatique des offres (connecteur RSS)
-- [ ] Étape 9 — Planification et automatisation
-- [ ] Étape 10 — Notifications et tests de bout en bout
+- [x] Étape 9 — Planification et automatisation
+- [ ] Étape 10 — Tests de bout en bout
 
 ## Sécurité
 
