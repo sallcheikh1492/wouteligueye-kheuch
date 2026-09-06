@@ -95,6 +95,19 @@ Ces écrans nécessitent un vrai projet Supabase pour être testés de bout en b
 e-mail de confirmation, connexion, lien de réinitialisation) — ils ont été vérifiés visuellement
 et sur la validation des formulaires avec des identifiants factices, sans backend réel.
 
+## Interface principale
+
+Le tableau de bord, les offres, les candidatures et le profil sont branchés sur Supabase via des
+services typés (`src/services/`) et des hooks TanStack Query (`src/hooks/`) : requêtes mises en
+cache, invalidées automatiquement après chaque mutation, avec états de chargement (skeletons) et
+d'erreur explicites. La page Offres liste les `job_matches` de l'utilisateur (favoris, ignorer,
+préparer une candidature) ; Candidatures permet de changer le statut d'une candidature ; Profil
+gère les informations générales et les compétences, avec un bouton pour charger le profil de
+démonstration (`seed_demo_profile()`).
+
+Ces écrans restent vides tant qu'aucune offre n'a été découverte ou analysée — normal avant les
+étapes Agents IA et Découverte automatique, qui alimenteront `jobs` et `job_matches`.
+
 ## Fournisseurs IA
 
 L'application communique avec les modèles d'IA uniquement depuis les Edge Functions Supabase, via
@@ -107,7 +120,7 @@ appelant.
 - [x] Étape 1 — Architecture et scaffolding (frontend, structure de dossiers, shadcn/ui)
 - [x] Étape 2 — Schéma de base de données et politiques RLS
 - [x] Étape 3 — Authentification (inscription, connexion, réinitialisation)
-- [ ] Étape 4 — Interface principale (dashboard, offres, candidatures, profil)
+- [x] Étape 4 — Interface principale (dashboard, offres, candidatures, profil)
 - [ ] Étape 5 — Import et analyse de CV
 - [ ] Étape 6 — Moteur de matching IA
 - [ ] Étape 7 — Agents IA (CV, offres, lettres de motivation)
