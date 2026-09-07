@@ -32,6 +32,19 @@ sont publiques par conception (protégées par Row Level Security) — ne jamais
 npm run dev
 ```
 
+## Tests
+
+```bash
+npm test           # exécute une fois
+npm run test:watch # mode watch
+```
+
+Couvre pour l'instant `_shared/matching/scoring.ts` (41 tests) : c'est la logique la plus critique
+de l'app (elle détermine ce que voit l'utilisateur) et elle est pure — aucune dépendance à Deno, à
+Supabase ou à un appel IA — donc rapide à tester avec Vitest et sûre à faire évoluer sans backend.
+Placé dans `supabase/functions/` à côté du code qu'il teste plutôt que dans `src/`, puisqu'il cible
+la logique des Edge Functions, pas le frontend (voir `vitest.config.ts`).
+
 ## Configuration Supabase
 
 1. Créez un projet sur [supabase.com](https://supabase.com).
