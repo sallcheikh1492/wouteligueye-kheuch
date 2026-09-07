@@ -86,6 +86,11 @@ export default function Login() {
                   Créer un compte
                 </Link>
               </p>
+              <p className="text-center text-xs text-muted-foreground">
+                <Link to="/demo" className="underline">
+                  Voir une démo sans compte
+                </Link>
+              </p>
             </form>
           </Form>
         </CardContent>

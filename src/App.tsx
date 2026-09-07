@@ -13,6 +13,7 @@ import Login from '@/pages/Login'
 import Signup from '@/pages/Signup'
 import ForgotPassword from '@/pages/ForgotPassword'
 import ResetPassword from '@/pages/ResetPassword'
+import Demo from '@/pages/Demo'
 import NotFound from '@/pages/NotFound'
 
 function App() {
@@ -27,6 +28,11 @@ function App() {
       {/* Reachable only via the recovery link Supabase emails; not gated behind PublicOnlyRoute
           because clicking it already creates a temporary session. */}
       <Route path="/reset-password" element={<ResetPassword />} />
+
+      {/* Public, no auth state check either way — a demo of the product
+          should work identically for a logged-out visitor and a curious
+          existing user. */}
+      <Route path="/demo" element={<Demo />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppShell />}>
