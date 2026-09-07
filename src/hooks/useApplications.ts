@@ -51,6 +51,7 @@ export function useUpdateApplication() {
       updateApplication(id, patch),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard_stats', user?.id] })
     },
   })
 }

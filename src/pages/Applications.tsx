@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { KanbanBoard } from '@/components/applications/KanbanBoard'
 import { useApplications, useUpdateApplication } from '@/hooks/useApplications'
 import type { ApplicationStatus } from '@/types/database'
 
@@ -30,6 +32,7 @@ export default function Applications() {
   const { data: applications, isLoading, isError } = useApplications()
   const updateApplication = useUpdateApplication()
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [view, setView] = useState<'kanban' | 'list'>('kanban')
 
   const filtered = useMemo(() => {
     if (!applications) return []
@@ -47,8 +50,10 @@ export default function Applications() {
     )
   }
 
+  const isEmpty = !isLoading && !isError && (applications?.length ?? 0) === 0
+
   return (
-    <div className="flex flex-col gap-6">
+    <Tabs value={view} onValueChange={(v) => setView(v as 'kanban' | 'list')} className="gap-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Candidatures</h1>
@@ -56,19 +61,27 @@ export default function Applications() {
             Suivez l&apos;évolution de toutes vos candidatures.
           </p>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous les statuts</SelectItem>
-            {STATUSES.map((s) => (
-              <SelectItem key={s.value} value={s.value}>
-                {s.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <TabsList>
+            <TabsTrigger value="kanban">Kanban</TabsTrigger>
+            <TabsTrigger value="list">Liste</TabsTrigger>
+          </TabsList>
+          {view === 'list' && (
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-56">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                {STATUSES.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </div>
 
       {isLoading && (
@@ -90,7 +103,7 @@ export default function Applications() {
         </Card>
       )}
 
-      {!isLoading && !isError && filtered.length === 0 && (
+      {isEmpty && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
             <p className="text-sm font-medium">Aucune candidature</p>
@@ -101,42 +114,58 @@ export default function Applications() {
         </Card>
       )}
 
-      {!isLoading && !isError && filtered.length > 0 && (
-        <div className="flex flex-col gap-3">
-          {filtered.map((application) => (
-            <Card key={application.id}>
-              <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <Link to={`/jobs/${application.job_id}`} className="font-medium hover:underline">
-                    {application.jobs.title}
-                  </Link>
-                  <p className="text-sm text-muted-foreground">{application.jobs.company}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant="outline" className="hidden sm:inline-flex">
-                    {STATUS_LABEL[application.status]}
-                  </Badge>
-                  <Select
-                    value={application.status}
-                    onValueChange={(value) => handleStatusChange(application.id, value as ApplicationStatus)}
-                  >
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUSES.map((s) => (
-                        <SelectItem key={s.value} value={s.value}>
-                          {s.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      {!isLoading && !isError && !isEmpty && (
+        <>
+          <TabsContent value="kanban">
+            <KanbanBoard applications={applications ?? []} />
+          </TabsContent>
+
+          <TabsContent value="list">
+            {filtered.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+                  <p className="text-sm font-medium">Aucune candidature pour ce statut</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {filtered.map((application) => (
+                  <Card key={application.id}>
+                    <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <Link to={`/jobs/${application.job_id}`} className="font-medium hover:underline">
+                          {application.jobs.title}
+                        </Link>
+                        <p className="text-sm text-muted-foreground">{application.jobs.company}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="hidden sm:inline-flex">
+                          {STATUS_LABEL[application.status]}
+                        </Badge>
+                        <Select
+                          value={application.status}
+                          onValueChange={(value) => handleStatusChange(application.id, value as ApplicationStatus)}
+                        >
+                          <SelectTrigger className="w-48">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUSES.map((s) => (
+                              <SelectItem key={s.value} value={s.value}>
+                                {s.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </>
       )}
-    </div>
+    </Tabs>
   )
 }
