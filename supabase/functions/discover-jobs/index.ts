@@ -47,14 +47,11 @@ Deno.serve(async (req) => {
 
   try {
     const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
-    if (!apiKey) {
-      throw new Error("Le fournisseur IA n'est pas configuré")
-    }
 
     const result = await runDiscoveryForUser({
       userClient,
       serviceClient,
-      provider: new AnthropicProvider(apiKey),
+      provider: apiKey ? new AnthropicProvider(apiKey) : null,
       userId: user.id,
     })
 

@@ -45,10 +45,9 @@ Deno.serve(async (req) => {
   const serviceClient = createServiceRoleClient()
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
   if (!apiKey) {
-    console.error('ANTHROPIC_API_KEY is not configured')
-    return jsonResponse({ error: "Le fournisseur IA n'est pas configuré" }, 500)
+    console.error('ANTHROPIC_API_KEY is not configured — job ingestion will still run, matching will be skipped')
   }
-  const provider = new AnthropicProvider(apiKey)
+  const provider = apiKey ? new AnthropicProvider(apiKey) : null
 
   const { data: preferences, error: prefsError } = await serviceClient
     .from('job_preferences')

@@ -3,8 +3,9 @@
 Assistant personnel de recherche d'emploi assisté par IA : analyse de CV, découverte automatique
 d'offres, scoring de compatibilité, génération de documents de candidature et suivi centralisé.
 
-> **Statut** : projet en cours de construction par étapes. Voir [Feuille de route](#feuille-de-route)
-> pour l'état d'avancement.
+> **Statut** : déployé sur un vrai projet Supabase et vérifié en conditions réelles (voir
+> [Déploiement réel](#déploiement-réel)). Il manque uniquement une clé Anthropic pour activer les
+> fonctions IA. Voir [Feuille de route](#feuille-de-route) pour le détail par étape.
 
 ## Stack technique
 
@@ -252,7 +253,27 @@ Les 5 méthodes de l'interface `AIProvider` sont maintenant implémentées : `an
 - [x] Étape 7 — Agents IA (lettre de motivation, CV optimisé)
 - [x] Étape 8 — Découverte automatique des offres (connecteur RSS)
 - [x] Étape 9 — Planification et automatisation
-- [ ] Étape 10 — Tests de bout en bout
+- [x] Étape 10 — Déploiement réel et tests de bout en bout
+
+## Déploiement réel
+
+Le projet est déployé sur un vrai projet Supabase (`joaoematkfycxyrhyaew`, région `eu-west-3`),
+schéma + RLS + Storage + 9 Edge Functions + cron actif. Vérifié en conditions réelles :
+
+- Inscription avec confirmation par e-mail réelle, connexion, création automatique du profil.
+- `seed_demo_profile()` : 27 compétences + préférences chargées correctement (RLS respectée).
+- Ajout d'une source RSS réelle et **découverte réelle de 25 offres** via `discover-jobs` (flux
+  public WeWorkRemotely) — bogue trouvé et corrigé au passage : l'ingestion RSS échouait
+  entièrement si `ANTHROPIC_API_KEY` n'était pas configurée, alors qu'elle ne devrait dépendre de
+  l'IA que pour l'étape de scoring, pas pour la récupération/déduplication des offres.
+- Upload de CV vers Storage et écriture dans `cvs` avec RLS appliquée par utilisateur (testé via
+  l'API avec un vrai jeton de session).
+- `src/types/database.ts` régénéré depuis le schéma réel (`supabase gen types typescript --linked`)
+  — remplace la version écrite à la main, désormais garantie de ne jamais diverger du schéma live.
+- `ANTHROPIC_API_KEY` n'est pas encore configurée sur ce projet : les fonctions qui en dépendent
+  (`analyze-cv`, `analyze-job`, `calculate-job-match`, `generate-cover-letter`, `optimize-cv`)
+  renvoient une erreur claire tant qu'elle n'est pas ajoutée avec
+  `npx supabase secrets set ANTHROPIC_API_KEY=sk-ant-...`.
 
 ## Sécurité
 

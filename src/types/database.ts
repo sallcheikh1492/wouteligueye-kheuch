@@ -1,529 +1,903 @@
-// Hand-written to match supabase/migrations/*.sql exactly.
-// Once a Supabase project is linked, regenerate with:
-//   npx supabase gen types typescript --linked > src/types/database.ts
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
-
-export type SkillCategory =
-  | 'programming'
-  | 'database'
-  | 'business_intelligence'
-  | 'data_analysis'
-  | 'machine_learning'
-  | 'big_data'
-  | 'cloud'
-  | 'soft_skills'
-
-export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert'
-
-export type EmploymentType = 'full_time' | 'part_time' | 'contract' | 'internship' | 'freelance'
-
-export type RemotePreference = 'onsite' | 'hybrid' | 'remote' | 'any'
-
-export type SearchFrequency = 'every_6_hours' | 'every_12_hours' | 'daily' | 'weekly'
-
-export type JobSourceType = 'official_api' | 'rss_feed' | 'company_career_page' | 'manual'
-
-export type JobStatus = 'active' | 'expired' | 'closed' | 'duplicate'
-
-export type ApplicationStatus =
-  | 'discovered'
-  | 'reviewing'
-  | 'interested'
-  | 'documents_ready'
-  | 'ready_to_apply'
-  | 'submitted'
-  | 'interview'
-  | 'rejected'
-  | 'accepted'
-  | 'withdrawn'
-  | 'no_response'
-
-export type GeneratedDocumentType = 'optimized_cv' | 'cover_letter' | 'application_answers'
-
-export type AgentType =
-  | 'cv_analysis'
-  | 'job_discovery'
-  | 'job_matching'
-  | 'cover_letter_generation'
-  | 'cv_optimization'
-  | 'scheduled_job_search'
-
-export type AgentRunStatus = 'running' | 'completed' | 'failed' | 'partial'
-
-export type NotificationType =
-  | 'new_match'
-  | 'deadline_reminder'
-  | 'follow_up_reminder'
-  | 'status_change'
-  | 'agent_summary'
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      profiles: {
+      agent_runs: {
         Row: {
+          agent_type: Database["public"]["Enums"]["agent_type"]
+          completed_at: string | null
+          errors: Json
           id: string
-          full_name: string | null
-          email: string
-          phone: string | null
-          location: string | null
-          linkedin_url: string | null
-          portfolio_url: string | null
-          github_url: string | null
-          professional_summary: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id: string
-          full_name?: string | null
-          email: string
-          phone?: string | null
-          location?: string | null
-          linkedin_url?: string | null
-          portfolio_url?: string | null
-          github_url?: string | null
-          professional_summary?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: Partial<Database['public']['Tables']['profiles']['Insert']>
-        Relationships: []
-      }
-      cvs: {
-        Row: {
-          id: string
+          jobs_found: number
+          jobs_matched: number
+          jobs_processed: number
+          metadata: Json
+          started_at: string
+          status: Database["public"]["Enums"]["agent_run_status"]
           user_id: string
-          name: string
-          file_url: string
-          file_type: string
-          is_primary: boolean
-          raw_text: string | null
-          parsed_data: Json | null
-          created_at: string
-          updated_at: string
         }
         Insert: {
+          agent_type: Database["public"]["Enums"]["agent_type"]
+          completed_at?: string | null
+          errors?: Json
           id?: string
+          jobs_found?: number
+          jobs_matched?: number
+          jobs_processed?: number
+          metadata?: Json
+          started_at?: string
+          status?: Database["public"]["Enums"]["agent_run_status"]
           user_id: string
-          name: string
-          file_url: string
-          file_type: string
-          is_primary?: boolean
-          raw_text?: string | null
-          parsed_data?: Json | null
-          created_at?: string
-          updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['cvs']['Insert']>
+        Update: {
+          agent_type?: Database["public"]["Enums"]["agent_type"]
+          completed_at?: string | null
+          errors?: Json
+          id?: string
+          jobs_found?: number
+          jobs_matched?: number
+          jobs_processed?: number
+          metadata?: Json
+          started_at?: string
+          status?: Database["public"]["Enums"]["agent_run_status"]
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: 'cvs_user_id_fkey'
-            columns: ['user_id']
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      skills: {
-        Row: {
-          id: string
-          user_id: string
-          name: string
-          category: SkillCategory
-          level: SkillLevel | null
-          years_experience: number | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          name: string
-          category: SkillCategory
-          level?: SkillLevel | null
-          years_experience?: number | null
-          created_at?: string
-        }
-        Update: Partial<Database['public']['Tables']['skills']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'skills_user_id_fkey'
-            columns: ['user_id']
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      job_preferences: {
-        Row: {
-          id: string
-          user_id: string
-          desired_titles: Json
-          preferred_locations: Json
-          employment_types: EmploymentType[]
-          remote_preference: RemotePreference
-          minimum_salary: number | null
-          keywords: Json
-          excluded_keywords: Json
-          search_frequency: SearchFrequency
-          auto_apply_enabled: boolean
-          minimum_match_score: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          desired_titles?: Json
-          preferred_locations?: Json
-          employment_types?: EmploymentType[]
-          remote_preference?: RemotePreference
-          minimum_salary?: number | null
-          keywords?: Json
-          excluded_keywords?: Json
-          search_frequency?: SearchFrequency
-          auto_apply_enabled?: boolean
-          minimum_match_score?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: Partial<Database['public']['Tables']['job_preferences']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'job_preferences_user_id_fkey'
-            columns: ['user_id']
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      job_sources: {
-        Row: {
-          id: string
-          name: string
-          url: string | null
-          type: JobSourceType
-          is_active: boolean
-          api_available: boolean
-          last_checked_at: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          url?: string | null
-          type: JobSourceType
-          is_active?: boolean
-          api_available?: boolean
-          last_checked_at?: string | null
-          created_at?: string
-        }
-        Update: Partial<Database['public']['Tables']['job_sources']['Insert']>
-        Relationships: []
-      }
-      jobs: {
-        Row: {
-          id: string
-          external_id: string | null
-          source_id: string
-          title: string
-          company: string
-          location: string | null
-          description: string | null
-          requirements: string | null
-          employment_type: EmploymentType | null
-          salary_min: number | null
-          salary_max: number | null
-          currency: string | null
-          application_url: string | null
-          published_at: string | null
-          expires_at: string | null
-          raw_data: Json | null
-          ai_analysis: Json | null
-          status: JobStatus
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          external_id?: string | null
-          source_id: string
-          title: string
-          company: string
-          location?: string | null
-          description?: string | null
-          requirements?: string | null
-          employment_type?: EmploymentType | null
-          salary_min?: number | null
-          salary_max?: number | null
-          currency?: string | null
-          application_url?: string | null
-          published_at?: string | null
-          expires_at?: string | null
-          raw_data?: Json | null
-          ai_analysis?: Json | null
-          status?: JobStatus
-          created_at?: string
-        }
-        Update: Partial<Database['public']['Tables']['jobs']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'jobs_source_id_fkey'
-            columns: ['source_id']
-            referencedRelation: 'job_sources'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      job_matches: {
-        Row: {
-          id: string
-          job_id: string
-          user_id: string
-          overall_score: number
-          skills_score: number | null
-          experience_score: number | null
-          education_score: number | null
-          location_score: number | null
-          keywords_score: number | null
-          ai_analysis: Json | null
-          missing_skills: Json
-          strengths: Json
-          recommendation: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          job_id: string
-          user_id: string
-          overall_score: number
-          skills_score?: number | null
-          experience_score?: number | null
-          education_score?: number | null
-          location_score?: number | null
-          keywords_score?: number | null
-          ai_analysis?: Json | null
-          missing_skills?: Json
-          strengths?: Json
-          recommendation?: string | null
-          created_at?: string
-        }
-        Update: Partial<Database['public']['Tables']['job_matches']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'job_matches_job_id_fkey'
-            columns: ['job_id']
-            referencedRelation: 'jobs'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'job_matches_user_id_fkey'
-            columns: ['user_id']
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            foreignKeyName: "agent_runs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
       applications: {
         Row: {
-          id: string
-          user_id: string
-          job_id: string
-          cv_id: string | null
-          status: ApplicationStatus
           application_date: string | null
           application_url: string | null
           cover_letter: string | null
-          custom_answers: Json
-          notes: string | null
-          follow_up_date: string | null
           created_at: string
+          custom_answers: Json
+          cv_id: string | null
+          follow_up_date: string | null
+          id: string
+          job_id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["application_status"]
           updated_at: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          job_id: string
-          cv_id?: string | null
-          status?: ApplicationStatus
           application_date?: string | null
           application_url?: string | null
           cover_letter?: string | null
-          custom_answers?: Json
-          notes?: string | null
-          follow_up_date?: string | null
           created_at?: string
+          custom_answers?: Json
+          cv_id?: string | null
+          follow_up_date?: string | null
+          id?: string
+          job_id: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
+          user_id: string
         }
-        Update: Partial<Database['public']['Tables']['applications']['Insert']>
+        Update: {
+          application_date?: string | null
+          application_url?: string | null
+          cover_letter?: string | null
+          created_at?: string
+          custom_answers?: Json
+          cv_id?: string | null
+          follow_up_date?: string | null
+          id?: string
+          job_id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: 'applications_job_id_fkey'
-            columns: ['job_id']
-            referencedRelation: 'jobs'
-            referencedColumns: ['id']
+            foreignKeyName: "applications_cv_id_fkey"
+            columns: ["cv_id"]
+            isOneToOne: false
+            referencedRelation: "cvs"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'applications_cv_id_fkey'
-            columns: ['cv_id']
-            referencedRelation: 'cvs'
-            referencedColumns: ['id']
+            foreignKeyName: "applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'applications_user_id_fkey'
-            columns: ['user_id']
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            foreignKeyName: "applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cvs: {
+        Row: {
+          created_at: string
+          file_type: string
+          file_url: string
+          id: string
+          is_primary: boolean
+          name: string
+          parsed_data: Json | null
+          raw_text: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_type: string
+          file_url: string
+          id?: string
+          is_primary?: boolean
+          name: string
+          parsed_data?: Json | null
+          raw_text?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          is_primary?: boolean
+          name?: string
+          parsed_data?: Json | null
+          raw_text?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cvs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
       generated_documents: {
         Row: {
-          id: string
-          user_id: string
-          job_id: string | null
           application_id: string | null
-          type: GeneratedDocumentType
           content: string | null
-          file_url: string | null
-          metadata: Json
           created_at: string
+          file_url: string | null
+          id: string
+          job_id: string | null
+          metadata: Json
+          type: Database["public"]["Enums"]["generated_document_type"]
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          job_id?: string | null
           application_id?: string | null
-          type: GeneratedDocumentType
           content?: string | null
-          file_url?: string | null
-          metadata?: Json
           created_at?: string
+          file_url?: string | null
+          id?: string
+          job_id?: string | null
+          metadata?: Json
+          type: Database["public"]["Enums"]["generated_document_type"]
+          user_id: string
         }
-        Update: Partial<Database['public']['Tables']['generated_documents']['Insert']>
+        Update: {
+          application_id?: string | null
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          job_id?: string | null
+          metadata?: Json
+          type?: Database["public"]["Enums"]["generated_document_type"]
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: 'generated_documents_job_id_fkey'
-            columns: ['job_id']
-            referencedRelation: 'jobs'
-            referencedColumns: ['id']
+            foreignKeyName: "generated_documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'generated_documents_application_id_fkey'
-            columns: ['application_id']
-            referencedRelation: 'applications'
-            referencedColumns: ['id']
+            foreignKeyName: "generated_documents_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'generated_documents_user_id_fkey'
-            columns: ['user_id']
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            foreignKeyName: "generated_documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
-      agent_runs: {
+      job_matches: {
         Row: {
+          ai_analysis: Json | null
+          created_at: string
+          education_score: number | null
+          experience_score: number | null
           id: string
+          job_id: string
+          keywords_score: number | null
+          location_score: number | null
+          missing_skills: Json
+          overall_score: number
+          recommendation: string | null
+          skills_score: number | null
+          strengths: Json
           user_id: string
-          agent_type: AgentType
-          status: AgentRunStatus
-          started_at: string
-          completed_at: string | null
-          jobs_found: number
-          jobs_processed: number
-          jobs_matched: number
-          errors: Json
-          metadata: Json
         }
         Insert: {
+          ai_analysis?: Json | null
+          created_at?: string
+          education_score?: number | null
+          experience_score?: number | null
           id?: string
+          job_id: string
+          keywords_score?: number | null
+          location_score?: number | null
+          missing_skills?: Json
+          overall_score: number
+          recommendation?: string | null
+          skills_score?: number | null
+          strengths?: Json
           user_id: string
-          agent_type: AgentType
-          status?: AgentRunStatus
-          started_at?: string
-          completed_at?: string | null
-          jobs_found?: number
-          jobs_processed?: number
-          jobs_matched?: number
-          errors?: Json
-          metadata?: Json
         }
-        Update: Partial<Database['public']['Tables']['agent_runs']['Insert']>
+        Update: {
+          ai_analysis?: Json | null
+          created_at?: string
+          education_score?: number | null
+          experience_score?: number | null
+          id?: string
+          job_id?: string
+          keywords_score?: number | null
+          location_score?: number | null
+          missing_skills?: Json
+          overall_score?: number
+          recommendation?: string | null
+          skills_score?: number | null
+          strengths?: Json
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: 'agent_runs_user_id_fkey'
-            columns: ['user_id']
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            foreignKeyName: "job_matches_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_preferences: {
+        Row: {
+          auto_apply_enabled: boolean
+          created_at: string
+          desired_titles: Json
+          employment_types: Database["public"]["Enums"]["employment_type"][]
+          excluded_keywords: Json
+          id: string
+          keywords: Json
+          minimum_match_score: number
+          minimum_salary: number | null
+          preferred_locations: Json
+          remote_preference: Database["public"]["Enums"]["remote_preference"]
+          search_frequency: Database["public"]["Enums"]["search_frequency"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_apply_enabled?: boolean
+          created_at?: string
+          desired_titles?: Json
+          employment_types?: Database["public"]["Enums"]["employment_type"][]
+          excluded_keywords?: Json
+          id?: string
+          keywords?: Json
+          minimum_match_score?: number
+          minimum_salary?: number | null
+          preferred_locations?: Json
+          remote_preference?: Database["public"]["Enums"]["remote_preference"]
+          search_frequency?: Database["public"]["Enums"]["search_frequency"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_apply_enabled?: boolean
+          created_at?: string
+          desired_titles?: Json
+          employment_types?: Database["public"]["Enums"]["employment_type"][]
+          excluded_keywords?: Json
+          id?: string
+          keywords?: Json
+          minimum_match_score?: number
+          minimum_salary?: number | null
+          preferred_locations?: Json
+          remote_preference?: Database["public"]["Enums"]["remote_preference"]
+          search_frequency?: Database["public"]["Enums"]["search_frequency"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_sources: {
+        Row: {
+          api_available: boolean
+          created_at: string
+          id: string
+          is_active: boolean
+          last_checked_at: string | null
+          name: string
+          type: Database["public"]["Enums"]["job_source_type"]
+          url: string | null
+        }
+        Insert: {
+          api_available?: boolean
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_checked_at?: string | null
+          name: string
+          type: Database["public"]["Enums"]["job_source_type"]
+          url?: string | null
+        }
+        Update: {
+          api_available?: boolean
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_checked_at?: string | null
+          name?: string
+          type?: Database["public"]["Enums"]["job_source_type"]
+          url?: string | null
+        }
+        Relationships: []
+      }
+      jobs: {
+        Row: {
+          ai_analysis: Json | null
+          application_url: string | null
+          company: string
+          created_at: string
+          currency: string | null
+          description: string | null
+          employment_type: Database["public"]["Enums"]["employment_type"] | null
+          expires_at: string | null
+          external_id: string | null
+          id: string
+          location: string | null
+          published_at: string | null
+          raw_data: Json | null
+          requirements: string | null
+          salary_max: number | null
+          salary_min: number | null
+          source_id: string
+          status: Database["public"]["Enums"]["job_status"]
+          title: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          application_url?: string | null
+          company: string
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          employment_type?:
+            | Database["public"]["Enums"]["employment_type"]
+            | null
+          expires_at?: string | null
+          external_id?: string | null
+          id?: string
+          location?: string | null
+          published_at?: string | null
+          raw_data?: Json | null
+          requirements?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          source_id: string
+          status?: Database["public"]["Enums"]["job_status"]
+          title: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          application_url?: string | null
+          company?: string
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          employment_type?:
+            | Database["public"]["Enums"]["employment_type"]
+            | null
+          expires_at?: string | null
+          external_id?: string | null
+          id?: string
+          location?: string | null
+          published_at?: string | null
+          raw_data?: Json | null
+          requirements?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          source_id?: string
+          status?: Database["public"]["Enums"]["job_status"]
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "job_sources"
+            referencedColumns: ["id"]
           },
         ]
       }
       notifications: {
         Row: {
-          id: string
-          user_id: string
-          title: string
-          message: string
-          type: NotificationType
-          related_job_id: string | null
-          is_read: boolean
           created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          related_job_id: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          title: string
-          message: string
-          type: NotificationType
-          related_job_id?: string | null
-          is_read?: boolean
           created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          related_job_id?: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
         }
-        Update: Partial<Database['public']['Tables']['notifications']['Insert']>
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          related_job_id?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: 'notifications_related_job_id_fkey'
-            columns: ['related_job_id']
-            referencedRelation: 'jobs'
-            referencedColumns: ['id']
+            foreignKeyName: "notifications_related_job_id_fkey"
+            columns: ["related_job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'notifications_user_id_fkey'
-            columns: ['user_id']
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          github_url: string | null
+          id: string
+          linkedin_url: string | null
+          location: string | null
+          phone: string | null
+          portfolio_url: string | null
+          professional_summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          github_url?: string | null
+          id: string
+          linkedin_url?: string | null
+          location?: string | null
+          phone?: string | null
+          portfolio_url?: string | null
+          professional_summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          github_url?: string | null
+          id?: string
+          linkedin_url?: string | null
+          location?: string | null
+          phone?: string | null
+          portfolio_url?: string | null
+          professional_summary?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      skills: {
+        Row: {
+          category: Database["public"]["Enums"]["skill_category"]
+          created_at: string
+          id: string
+          level: Database["public"]["Enums"]["skill_level"] | null
+          name: string
+          user_id: string
+          years_experience: number | null
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["skill_category"]
+          created_at?: string
+          id?: string
+          level?: Database["public"]["Enums"]["skill_level"] | null
+          name: string
+          user_id: string
+          years_experience?: number | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["skill_category"]
+          created_at?: string
+          id?: string
+          level?: Database["public"]["Enums"]["skill_level"] | null
+          name?: string
+          user_id?: string
+          years_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skills_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
     }
-    Views: Record<string, never>
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
-      seed_demo_profile: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      seed_demo_profile: { Args: never; Returns: undefined }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
-      skill_category: SkillCategory
-      skill_level: SkillLevel
-      employment_type: EmploymentType
-      remote_preference: RemotePreference
-      search_frequency: SearchFrequency
-      job_source_type: JobSourceType
-      job_status: JobStatus
-      application_status: ApplicationStatus
-      generated_document_type: GeneratedDocumentType
-      agent_type: AgentType
-      agent_run_status: AgentRunStatus
-      notification_type: NotificationType
+      agent_run_status: "running" | "completed" | "failed" | "partial"
+      agent_type:
+        | "cv_analysis"
+        | "job_discovery"
+        | "job_matching"
+        | "cover_letter_generation"
+        | "cv_optimization"
+        | "scheduled_job_search"
+      application_status:
+        | "discovered"
+        | "reviewing"
+        | "interested"
+        | "documents_ready"
+        | "ready_to_apply"
+        | "submitted"
+        | "interview"
+        | "rejected"
+        | "accepted"
+        | "withdrawn"
+        | "no_response"
+      employment_type:
+        | "full_time"
+        | "part_time"
+        | "contract"
+        | "internship"
+        | "freelance"
+      generated_document_type:
+        | "optimized_cv"
+        | "cover_letter"
+        | "application_answers"
+      job_source_type:
+        | "official_api"
+        | "rss_feed"
+        | "company_career_page"
+        | "manual"
+      job_status: "active" | "expired" | "closed" | "duplicate"
+      notification_type:
+        | "new_match"
+        | "deadline_reminder"
+        | "follow_up_reminder"
+        | "status_change"
+        | "agent_summary"
+      remote_preference: "onsite" | "hybrid" | "remote" | "any"
+      search_frequency: "every_6_hours" | "every_12_hours" | "daily" | "weekly"
+      skill_category:
+        | "programming"
+        | "database"
+        | "business_intelligence"
+        | "data_analysis"
+        | "machine_learning"
+        | "big_data"
+        | "cloud"
+        | "soft_skills"
+      skill_level: "beginner" | "intermediate" | "advanced" | "expert"
     }
-    CompositeTypes: Record<string, never>
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
-export type TablesInsert<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Insert']
-export type TablesUpdate<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Update']
-export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {
+      agent_run_status: ["running", "completed", "failed", "partial"],
+      agent_type: [
+        "cv_analysis",
+        "job_discovery",
+        "job_matching",
+        "cover_letter_generation",
+        "cv_optimization",
+        "scheduled_job_search",
+      ],
+      application_status: [
+        "discovered",
+        "reviewing",
+        "interested",
+        "documents_ready",
+        "ready_to_apply",
+        "submitted",
+        "interview",
+        "rejected",
+        "accepted",
+        "withdrawn",
+        "no_response",
+      ],
+      employment_type: [
+        "full_time",
+        "part_time",
+        "contract",
+        "internship",
+        "freelance",
+      ],
+      generated_document_type: [
+        "optimized_cv",
+        "cover_letter",
+        "application_answers",
+      ],
+      job_source_type: [
+        "official_api",
+        "rss_feed",
+        "company_career_page",
+        "manual",
+      ],
+      job_status: ["active", "expired", "closed", "duplicate"],
+      notification_type: [
+        "new_match",
+        "deadline_reminder",
+        "follow_up_reminder",
+        "status_change",
+        "agent_summary",
+      ],
+      remote_preference: ["onsite", "hybrid", "remote", "any"],
+      search_frequency: ["every_6_hours", "every_12_hours", "daily", "weekly"],
+      skill_category: [
+        "programming",
+        "database",
+        "business_intelligence",
+        "data_analysis",
+        "machine_learning",
+        "big_data",
+        "cloud",
+        "soft_skills",
+      ],
+      skill_level: ["beginner", "intermediate", "advanced", "expert"],
+    },
+  },
+} as const
+
+// Convenience aliases used throughout the app, derived from the generated
+// Enums<> helper above so they can never drift from the live schema.
+export type SkillCategory = Enums<'skill_category'>
+export type SkillLevel = Enums<'skill_level'>
+export type EmploymentType = Enums<'employment_type'>
+export type RemotePreference = Enums<'remote_preference'>
+export type SearchFrequency = Enums<'search_frequency'>
+export type JobSourceType = Enums<'job_source_type'>
+export type JobStatus = Enums<'job_status'>
+export type ApplicationStatus = Enums<'application_status'>
+export type GeneratedDocumentType = Enums<'generated_document_type'>
+export type AgentType = Enums<'agent_type'>
+export type AgentRunStatus = Enums<'agent_run_status'>
+export type NotificationType = Enums<'notification_type'>

@@ -29,7 +29,10 @@ export type DiscoveryResult = {
 export async function runDiscoveryForUser(params: {
   userClient: SupabaseClient
   serviceClient: SupabaseClient
-  provider: AIProvider
+  // Ingestion (fetch + dedupe + insert) never needs AI and always runs.
+  // Auto-matching needs a configured provider — pass null to skip it
+  // (e.g. ANTHROPIC_API_KEY not set yet) without failing the whole run.
+  provider: AIProvider | null
   userId: string
 }): Promise<DiscoveryResult> {
   const { userClient, serviceClient, provider, userId } = params
@@ -104,15 +107,21 @@ export async function runDiscoveryForUser(params: {
     }
   }
 
-  for (const job of newlyInsertedJobs.slice(0, MAX_AUTO_MATCH_PER_RUN)) {
-    try {
-      const result = await computeAndSaveMatch({ userClient, serviceClient, provider, userId, job })
-      if (result) {
-        jobsMatched++
-        newMatches.push({ jobId: job.id, jobTitle: job.title, company: job.company, overallScore: result.overall_score })
+  if (!provider && newlyInsertedJobs.length > 0) {
+    errors.push('AI matching skipped: ANTHROPIC_API_KEY not configured')
+  }
+
+  if (provider) {
+    for (const job of newlyInsertedJobs.slice(0, MAX_AUTO_MATCH_PER_RUN)) {
+      try {
+        const result = await computeAndSaveMatch({ userClient, serviceClient, provider, userId, job })
+        if (result) {
+          jobsMatched++
+          newMatches.push({ jobId: job.id, jobTitle: job.title, company: job.company, overallScore: result.overall_score })
+        }
+      } catch (matchError) {
+        errors.push(`match ${job.title}: ${matchError instanceof Error ? matchError.message : String(matchError)}`)
       }
-    } catch (matchError) {
-      errors.push(`match ${job.title}: ${matchError instanceof Error ? matchError.message : String(matchError)}`)
     }
   }
 
