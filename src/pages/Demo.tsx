@@ -36,9 +36,9 @@ const RECENT_APPLICATIONS = [
 export default function Demo() {
   return (
     <div className="min-h-svh bg-background">
-      <div className="flex items-center justify-between gap-4 border-b border-border bg-primary/5 px-4 py-3 sm:px-6">
+      <div className="flex flex-col items-start gap-3 border-b border-border bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
         <div className="flex items-center gap-2">
-          <Bot className="size-5 text-primary" />
+          <Bot className="size-5 shrink-0 text-primary" />
           <div>
             <p className="text-sm font-semibold">Mode démo — données fictives</p>
             <p className="text-xs text-muted-foreground">

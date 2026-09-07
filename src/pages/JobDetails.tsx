@@ -197,7 +197,11 @@ export default function JobDetails() {
                   <p className="mb-2 text-sm font-medium">Points forts</p>
                   <div className="flex flex-wrap gap-1.5">
                     {strengths.map((s) => (
-                      <Badge key={s} variant="secondary">
+                      <Badge
+                        key={s}
+                        variant="secondary"
+                        className="max-w-full whitespace-normal break-words text-left"
+                      >
                         {s}
                       </Badge>
                     ))}
@@ -209,7 +213,11 @@ export default function JobDetails() {
                   <p className="mb-2 text-sm font-medium">Compétences manquantes</p>
                   <div className="flex flex-wrap gap-1.5">
                     {missingSkills.map((s) => (
-                      <Badge key={s} variant="outline">
+                      <Badge
+                        key={s}
+                        variant="outline"
+                        className="max-w-full whitespace-normal break-words text-left"
+                      >
                         {s}
                       </Badge>
                     ))}
