@@ -369,6 +369,7 @@ export type Database = {
           search_frequency: Database["public"]["Enums"]["search_frequency"]
           updated_at: string
           user_id: string
+          web_search_enabled: boolean
         }
         Insert: {
           auto_apply_enabled?: boolean
@@ -385,6 +386,7 @@ export type Database = {
           search_frequency?: Database["public"]["Enums"]["search_frequency"]
           updated_at?: string
           user_id: string
+          web_search_enabled?: boolean
         }
         Update: {
           auto_apply_enabled?: boolean
@@ -401,6 +403,7 @@ export type Database = {
           search_frequency?: Database["public"]["Enums"]["search_frequency"]
           updated_at?: string
           user_id?: string
+          web_search_enabled?: boolean
         }
         Relationships: [
           {
@@ -696,6 +699,7 @@ export type Database = {
         | "rss_feed"
         | "company_career_page"
         | "manual"
+        | "ai_web_search"
       job_status: "active" | "expired" | "closed" | "duplicate"
       notification_type:
         | "new_match"
@@ -884,6 +888,7 @@ export const Constants = {
         "rss_feed",
         "company_career_page",
         "manual",
+        "ai_web_search",
       ],
       job_status: ["active", "expired", "closed", "duplicate"],
       notification_type: [

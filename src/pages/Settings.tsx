@@ -71,6 +71,7 @@ function SearchFrequencyCard() {
 
 function SourcesCard() {
   const { data: sources, isLoading } = useJobSources()
+  const { data: prefs } = useJobPreferences()
   const addSource = useAddJobSource()
   const discover = useDiscoverJobs()
   const [name, setName] = useState('')
@@ -102,6 +103,7 @@ function SourcesCard() {
   }
 
   const rssSources = (sources ?? []).filter((s) => s.type === 'rss_feed')
+  const canDiscover = rssSources.length > 0 || !!prefs?.web_search_enabled
 
   return (
     <Card>
@@ -162,7 +164,7 @@ function SourcesCard() {
           variant="outline"
           className="w-fit gap-1.5"
           onClick={handleDiscover}
-          disabled={discover.isPending || rssSources.length === 0}
+          disabled={discover.isPending || !canDiscover}
         >
           {discover.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Search className="size-3.5" />}
           Lancer une recherche maintenant

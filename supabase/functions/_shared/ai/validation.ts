@@ -64,6 +64,17 @@ export const aiContextSchema = z.object({
 
 export const coverLetterSchema = z.string().trim().min(50)
 
+export const webSearchJobSchema = z.object({
+  title: z.string().min(1),
+  company: z.string().min(1),
+  location: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  application_url: z.string().url(),
+  published_at: z.string().nullable().optional(),
+})
+
+export const webSearchResultsSchema = z.array(webSearchJobSchema).max(20)
+
 export const optimizedCVSchema = z.object({
   summary: z.string(),
   highlighted_skills: z.array(z.string()),

@@ -47,11 +47,13 @@ Deno.serve(async (req) => {
 
   try {
     const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY') ?? null
 
     const result = await runDiscoveryForUser({
       userClient,
       serviceClient,
       provider: apiKey ? new AnthropicProvider(apiKey) : null,
+      openaiApiKey,
       userId: user.id,
     })
 

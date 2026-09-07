@@ -32,6 +32,7 @@ export function JobPreferencesCard() {
   const [keywords, setKeywords] = useState<string[] | null>(null)
   const [remotePreference, setRemotePreference] = useState<RemotePreference | null>(null)
   const [minimumMatchScore, setMinimumMatchScore] = useState<number | null>(null)
+  const [webSearchEnabled, setWebSearchEnabled] = useState<boolean | null>(null)
 
   // Local state is seeded lazily from the fetched row, then edited freely —
   // recomputing from `prefs` on every render would stomp on in-progress edits.
@@ -40,6 +41,7 @@ export function JobPreferencesCard() {
   const kw = keywords ?? asStringArray(prefs?.keywords) ?? []
   const remote = remotePreference ?? prefs?.remote_preference ?? 'any'
   const minScore = minimumMatchScore ?? prefs?.minimum_match_score ?? 60
+  const webSearch = webSearchEnabled ?? prefs?.web_search_enabled ?? false
 
   function handleSave() {
     updatePrefs.mutate(
@@ -49,6 +51,7 @@ export function JobPreferencesCard() {
         keywords: kw,
         remote_preference: remote,
         minimum_match_score: minScore,
+        web_search_enabled: webSearch,
       },
       {
         onSuccess: () => toast.success('Préférences enregistrées'),
@@ -119,6 +122,18 @@ export function JobPreferencesCard() {
               onChange={(e) => setMinimumMatchScore(Number(e.target.value))}
             />
           </div>
+        </div>
+
+        <div className="flex items-center justify-between rounded-md border border-border p-3">
+          <div>
+            <p className="text-sm font-medium">Recherche web via IA (OpenAI)</p>
+            <p className="text-xs text-muted-foreground">
+              En plus de vos flux RSS, demande à l&apos;IA de chercher sur le web des offres
+              réelles correspondant à vos postes recherchés. Nécessite une clé OpenAI configurée
+              côté serveur.
+            </p>
+          </div>
+          <Switch checked={webSearch} onCheckedChange={setWebSearchEnabled} />
         </div>
 
         <div className="flex items-center justify-between rounded-md border border-border p-3">

@@ -48,6 +48,7 @@ Deno.serve(async (req) => {
     console.error('ANTHROPIC_API_KEY is not configured — job ingestion will still run, matching will be skipped')
   }
   const provider = apiKey ? new AnthropicProvider(apiKey) : null
+  const openaiApiKey = Deno.env.get('OPENAI_API_KEY') ?? null
 
   const { data: preferences, error: prefsError } = await serviceClient
     .from('job_preferences')
@@ -96,6 +97,7 @@ Deno.serve(async (req) => {
         userClient: serviceClient, // no user session in a cron context — see file header
         serviceClient,
         provider,
+        openaiApiKey,
         userId,
       })
 

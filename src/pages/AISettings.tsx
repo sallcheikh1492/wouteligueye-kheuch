@@ -46,11 +46,20 @@ export default function AISettings() {
           <CardTitle className="text-base">Fournisseur IA</CardTitle>
           <CardDescription>Toutes les opérations IA s&apos;exécutent côté serveur.</CardDescription>
         </CardHeader>
-        <CardContent className="flex items-center justify-between rounded-md border border-border p-3">
-          <div className="flex items-center gap-2">
+        <CardContent className="flex flex-col gap-2">
+          <div className="flex items-center justify-between rounded-md border border-border p-3">
             <Label>Anthropic Claude</Label>
+            <span className="text-xs text-muted-foreground">Configuré via secret Edge Function</span>
           </div>
-          <span className="text-xs text-muted-foreground">Configuré via secret Edge Function</span>
+          <div className="flex items-center justify-between rounded-md border border-border p-3">
+            <div>
+              <Label>OpenAI (recherche web)</Label>
+              <p className="text-xs text-muted-foreground">
+                Activable dans Paramètres → Préférences de recherche.
+              </p>
+            </div>
+            <span className="text-xs text-muted-foreground">Configuré via secret Edge Function</span>
+          </div>
         </CardContent>
       </Card>
     </div>
