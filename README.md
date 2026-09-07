@@ -3,6 +3,8 @@
 Assistant personnel de recherche d'emploi assisté par IA : analyse de CV, découverte automatique
 d'offres, scoring de compatibilité, génération de documents de candidature et suivi centralisé.
 
+Dépôt : [github.com/sallcheikh1492/wouteligueye-kheuch](https://github.com/sallcheikh1492/wouteligueye-kheuch)
+
 > **Statut** : déployé sur un vrai projet Supabase et vérifié en conditions réelles (voir
 > [Déploiement réel](#déploiement-réel)). Il manque uniquement une clé Anthropic pour activer les
 > fonctions IA. Voir [Feuille de route](#feuille-de-route) pour le détail par étape.
