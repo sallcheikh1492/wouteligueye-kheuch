@@ -39,11 +39,16 @@ npm test           # exécute une fois
 npm run test:watch # mode watch
 ```
 
-Couvre pour l'instant `_shared/matching/scoring.ts` (41 tests) : c'est la logique la plus critique
-de l'app (elle détermine ce que voit l'utilisateur) et elle est pure — aucune dépendance à Deno, à
-Supabase ou à un appel IA — donc rapide à tester avec Vitest et sûre à faire évoluer sans backend.
-Placé dans `supabase/functions/` à côté du code qu'il teste plutôt que dans `src/`, puisqu'il cible
-la logique des Edge Functions, pas le frontend (voir `vitest.config.ts`).
+Couvre `_shared/matching/scoring.ts` (41 tests, logique pure) et `_shared/matching/
+computeAndSaveMatch.ts` (7 tests) : ce dernier orchestre les clients Supabase et le provider IA,
+donc testé avec un faux client (`_shared/testing/fakeSupabaseClient.ts` — un query builder minimal
+qui reproduit juste `.eq().maybeSingle()` / `.update()` / `.upsert()`) et un `AIProvider` simulé,
+sans jamais toucher le réseau. Ces tests couvrent notamment le cas « pas de CV principal analysé »
+(retourne `null` sans appeler l'IA), la mise en cache de l'analyse d'offre, et la propagation d'une
+erreur d'enregistrement plutôt que de l'avaler silencieusement.
+
+Placés dans `supabase/functions/` à côté du code qu'ils testent plutôt que dans `src/`, puisqu'ils
+ciblent la logique des Edge Functions, pas le frontend (voir `vitest.config.ts`).
 
 ## Configuration Supabase
 
