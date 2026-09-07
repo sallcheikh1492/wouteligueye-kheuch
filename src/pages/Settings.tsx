@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useJobPreferences, useUpdateJobPreferences } from '@/hooks/useJobPreferences'
 import { useAddJobSource, useDiscoverJobs, useJobSources } from '@/hooks/useJobSources'
+import { JobPreferencesCard } from '@/components/settings/JobPreferencesCard'
 import type { SearchFrequency } from '@/types/database'
 
 const FREQUENCY_LABELS: Record<SearchFrequency, string> = {
@@ -181,6 +182,7 @@ export default function Settings() {
         </p>
       </div>
 
+      <JobPreferencesCard />
       <SearchFrequencyCard />
       <SourcesCard />
 
@@ -188,8 +190,9 @@ export default function Settings() {
         <CardHeader>
           <CardTitle className="text-base">Notifications</CardTitle>
           <CardDescription>
-            L&apos;envoi effectif (in-app, e-mail) arrive avec l&apos;étape suivante ; ces
-            préférences ne sont pas encore actives.
+            Les notifications dans l&apos;application (cloche en haut à droite) sont actives dès
+            qu&apos;une offre correspond à 80 % ou plus. L&apos;envoi par e-mail n&apos;est pas
+            encore disponible.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -199,7 +202,7 @@ export default function Settings() {
           </div>
           <div className="flex items-center justify-between">
             <Label htmlFor="notif-email">Notifications par e-mail</Label>
-            <Switch id="notif-email" defaultChecked disabled />
+            <Switch id="notif-email" disabled />
           </div>
         </CardContent>
       </Card>

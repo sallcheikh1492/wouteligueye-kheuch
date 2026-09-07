@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ScoreBadge } from '@/components/jobs/ScoreBadge'
+import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist'
 import {
   useDashboardStats,
   useRecentAgentRuns,
@@ -54,6 +55,8 @@ export default function Dashboard() {
           Vue d&apos;ensemble de votre recherche d&apos;emploi assistée par IA.
         </p>
       </div>
+
+      <OnboardingChecklist />
 
       {hasError && (
         <Alert variant="destructive">
