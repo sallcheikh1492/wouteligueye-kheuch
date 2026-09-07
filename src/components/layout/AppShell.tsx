@@ -132,7 +132,7 @@ export function AppShell() {
       <aside className="hidden w-64 shrink-0 border-r border-border md:flex md:flex-col">
         <div className="flex h-14 items-center gap-2 border-b border-border px-4">
           <Bot className="size-5 text-primary" />
-          <span className="font-semibold">JobHunter AI</span>
+          <span className="font-semibold">Wouteligueye Kheuch</span>
         </div>
         <div className="flex-1 overflow-y-auto py-4">
           <SidebarNav />
@@ -150,7 +150,7 @@ export function AppShell() {
             <div className="flex h-14 items-center justify-between border-b border-border px-4">
               <div className="flex items-center gap-2">
                 <Bot className="size-5 text-primary" />
-                <span className="font-semibold">JobHunter AI</span>
+                <span className="font-semibold">Wouteligueye Kheuch</span>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)}>
                 <X className="size-4" />
@@ -176,7 +176,7 @@ export function AppShell() {
               <Menu className="size-4" />
             </Button>
             <Link to="/" className="font-semibold md:hidden">
-              JobHunter AI
+              Wouteligueye Kheuch
             </Link>
           </div>
           <div className="flex items-center gap-1">

@@ -40,7 +40,7 @@ export default function Login() {
         <CardHeader className="items-center text-center">
           <Bot className="mb-2 size-8 text-primary" />
           <CardTitle>Connexion</CardTitle>
-          <CardDescription>Accédez à votre espace JobHunter AI</CardDescription>
+          <CardDescription>Accédez à votre espace Wouteligueye Kheuch</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>

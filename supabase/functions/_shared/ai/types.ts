@@ -1,4 +1,4 @@
-// Provider-agnostic contracts for every AI operation JobHunter AI performs.
+// Provider-agnostic contracts for every AI operation Wouteligueye Kheuch performs.
 // Implemented incrementally: analyzeCV ships with the CV import phase;
 // analyzeJob / calculateMatch ship with the matching engine phase;
 // generateCoverLetter / optimizeCV ship with the AI agents phase.

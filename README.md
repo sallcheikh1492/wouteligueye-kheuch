@@ -1,4 +1,4 @@
-# JobHunter AI
+# Wouteligueye Kheuch
 
 Assistant personnel de recherche d'emploi assisté par IA : analyse de CV, découverte automatique
 d'offres, scoring de compatibilité, génération de documents de candidature et suivi centralisé.
