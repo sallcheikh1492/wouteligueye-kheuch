@@ -277,6 +277,23 @@ schéma + RLS + Storage + 9 Edge Functions + cron actif. Vérifié en conditions
   renvoient une erreur claire tant qu'elle n'est pas ajoutée avec
   `npx supabase secrets set ANTHROPIC_API_KEY=sk-ant-...`.
 
+## Déploiement du frontend (Vercel)
+
+Le frontend est une SPA Vite/React statique — aucune configuration serveur particulière n'est
+nécessaire, seul `vercel.json` (inclus) ajoute la réécriture nécessaire pour que les routes
+React Router fonctionnent au rafraîchissement (`/jobs`, `/profile`, etc. renvoient toutes vers
+`index.html`).
+
+1. Sur [vercel.com/new](https://vercel.com/new), importez le dépôt GitHub
+   [`sallcheikh1492/wouteligueye-kheuch`](https://github.com/sallcheikh1492/wouteligueye-kheuch).
+2. Vercel détecte automatiquement le framework Vite (`npm run build`, dossier de sortie `dist`).
+3. Ajoutez ces deux variables d'environnement dans les paramètres du projet Vercel (Settings →
+   Environment Variables) — ce sont les mêmes que dans `.env.local`, publiques par conception :
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+4. Déployez. Les appels aux Edge Functions et à la base de données passeront directement par
+   Supabase ; aucun autre réglage n'est nécessaire côté Vercel.
+
 ## Sécurité
 
 - Row Level Security activée sur toutes les tables contenant des données utilisateur.
