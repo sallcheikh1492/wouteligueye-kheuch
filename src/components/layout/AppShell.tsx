@@ -13,6 +13,7 @@ import {
   Moon,
   Sun,
   LogOut,
+  ShieldCheck,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { cn } from 'cn'
@@ -27,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/contexts/AuthContext'
+import { useIsAdmin } from '@/hooks/useAdmin'
 import { NotificationsBell } from './NotificationsBell'
 
 const NAV_ITEMS: {
@@ -99,9 +101,14 @@ function UserMenu() {
 }
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+  const { data: isAdmin } = useIsAdmin()
+  const items = isAdmin
+    ? [...NAV_ITEMS, { to: '/admin/users', label: 'Administration', icon: ShieldCheck }]
+    : NAV_ITEMS
+
   return (
     <nav className="flex flex-col gap-1 px-3">
-      {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+      {items.map(({ to, label, icon: Icon, end }) => (
         <NavLink
           key={to}
           to={to}

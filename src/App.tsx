@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/layout/ProtectedRoute'
+import { AdminRoute } from '@/components/layout/AdminRoute'
 import Dashboard from '@/pages/Dashboard'
 import Jobs from '@/pages/Jobs'
 import JobDetails from '@/pages/JobDetails'
@@ -14,6 +15,7 @@ import Signup from '@/pages/Signup'
 import ForgotPassword from '@/pages/ForgotPassword'
 import ResetPassword from '@/pages/ResetPassword'
 import Demo from '@/pages/Demo'
+import AdminUsers from '@/pages/AdminUsers'
 import NotFound from '@/pages/NotFound'
 
 function App() {
@@ -44,6 +46,9 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/ai-settings" element={<AISettings />} />
           <Route path="/settings" element={<Settings />} />
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/users" element={<AdminUsers />} />
+          </Route>
         </Route>
       </Route>
 
