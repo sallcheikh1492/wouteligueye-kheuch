@@ -456,6 +456,7 @@ export type Database = {
           created_at: string
           currency: string | null
           description: string | null
+          duplicate_of_id: string | null
           employment_type: Database["public"]["Enums"]["employment_type"] | null
           expires_at: string | null
           external_id: string | null
@@ -477,6 +478,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           description?: string | null
+          duplicate_of_id?: string | null
           employment_type?:
             | Database["public"]["Enums"]["employment_type"]
             | null
@@ -500,6 +502,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           description?: string | null
+          duplicate_of_id?: string | null
           employment_type?:
             | Database["public"]["Enums"]["employment_type"]
             | null
@@ -517,6 +520,13 @@ export type Database = {
           title?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "jobs_duplicate_of_id_fkey"
+            columns: ["duplicate_of_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "jobs_source_id_fkey"
             columns: ["source_id"]
@@ -659,6 +669,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      find_duplicate_job: {
+        Args: { p_company: string; p_source_id: string; p_title: string }
+        Returns: string
+      }
       seed_demo_profile: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }

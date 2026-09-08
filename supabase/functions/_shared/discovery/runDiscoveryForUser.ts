@@ -15,15 +15,23 @@ type InsertedJob = {
   ai_analysis: unknown
 }
 
-// Shared by both the RSS and AI-web-search branches below: dedupes on
-// (source_id, external_id) and inserts, or records the failure.
+type InsertResult = { job: InsertedJob; isDuplicate: boolean }
+
+// Shared by both the RSS and AI-web-search branches below. First dedupes
+// exactly on (source_id, external_id) — re-ingesting the same item from the
+// same source. Then checks for a fuzzy cross-source duplicate (the same
+// posting found via a different feed, or via AI web search) using
+// find_duplicate_job (trigram similarity on title/company — see
+// 20260907030000_job_duplicate_detection.sql): if one is found, the row is
+// still inserted for provenance but flagged status='duplicate' and linked
+// via duplicate_of_id, so the caller can skip spending an AI match on it.
 async function insertIfNew(
   serviceClient: SupabaseClient,
   sourceId: string,
   sourceName: string,
   item: DiscoveredJob,
   errors: string[],
-): Promise<InsertedJob | null> {
+): Promise<InsertResult | null> {
   const { data: existing } = await serviceClient
     .from('jobs')
     .select('id')
@@ -31,6 +39,12 @@ async function insertIfNew(
     .eq('external_id', item.externalId)
     .maybeSingle()
   if (existing) return null
+
+  const { data: duplicateOfId } = await serviceClient.rpc('find_duplicate_job', {
+    p_source_id: sourceId,
+    p_title: item.title,
+    p_company: item.company,
+  })
 
   const { data: inserted, error: insertError } = await serviceClient
     .from('jobs')
@@ -43,7 +57,8 @@ async function insertIfNew(
       description: item.description ?? null,
       application_url: item.applicationUrl ?? null,
       published_at: item.publishedAt ?? null,
-      status: 'active',
+      status: duplicateOfId ? 'duplicate' : 'active',
+      duplicate_of_id: duplicateOfId ?? null,
     })
     .select('id, title, company, description, requirements, location, ai_analysis')
     .single()
@@ -51,7 +66,7 @@ async function insertIfNew(
     errors.push(`${sourceName}: ${insertError?.message ?? 'insert failed'}`)
     return null
   }
-  return inserted
+  return { job: inserted, isDuplicate: !!duplicateOfId }
 }
 
 // Caps how many newly discovered jobs get an AI match computed synchronously
@@ -113,10 +128,10 @@ export async function runDiscoveryForUser(params: {
       jobsFound += items.length
 
       for (const item of items) {
-        const inserted = await insertIfNew(serviceClient, source.id, source.name, item, errors)
-        if (inserted) {
+        const result = await insertIfNew(serviceClient, source.id, source.name, item, errors)
+        if (result) {
           jobsProcessed++
-          newlyInsertedJobs.push(inserted)
+          if (!result.isDuplicate) newlyInsertedJobs.push(result.job)
         }
       }
 
@@ -156,10 +171,10 @@ export async function runDiscoveryForUser(params: {
           jobsFound += items.length
 
           for (const item of items) {
-            const inserted = await insertIfNew(serviceClient, webSource.id, webSource.name, item, errors)
-            if (inserted) {
+            const result = await insertIfNew(serviceClient, webSource.id, webSource.name, item, errors)
+            if (result) {
               jobsProcessed++
-              newlyInsertedJobs.push(inserted)
+              if (!result.isDuplicate) newlyInsertedJobs.push(result.job)
             }
           }
 
